@@ -1,0 +1,686 @@
+[
+  {
+    "logged_at": "2026-07-06T10:15:40.313191+00:00",
+    "sensor_id": "UNKNOWN_999",
+    "trust_score": 0.0,
+    "trust_level": "LOW",
+    "scenario": "N/A",
+    "critical": false,
+    "decision": {
+      "reasoning": "Unknown sensor identity: UNKNOWN_999"
+    },
+    "result": "rejected: Unknown sensor identity: UNKNOWN_999"
+  },
+  {
+    "logged_at": "2026-07-06T10:15:42.380976+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:15:43.819134+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:15:45.201879+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:15:46.771007+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Normal",
+    "critical": false,
+    "decision": {
+      "reasoning": "High trust score and perfect sanity score justify acting locally on the sensor's recommendation.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:15:49.465796+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 0.509,
+    "trust_level": "MEDIUM",
+    "scenario": "Normal",
+    "critical": false,
+    "decision": {
+      "reasoning": "Medium trust score and sanity score, but failed fields and low severity indicate a need for human validation.",
+      "decision": "validate",
+      "action_required": "validation"
+    },
+    "result": "cloud_decided: validate"
+  },
+  {
+    "logged_at": "2026-07-06T10:15:50.874615+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:15:51.876236+00:00",
+    "sensor_id": "UNKNOWN_999",
+    "trust_score": 0.0,
+    "trust_level": "LOW",
+    "scenario": "N/A",
+    "critical": false,
+    "decision": {
+      "reasoning": "Unknown sensor identity: UNKNOWN_999"
+    },
+    "result": "rejected: Unknown sensor identity: UNKNOWN_999"
+  },
+  {
+    "logged_at": "2026-07-06T10:15:53.410823+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:15:55.031705+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:16:01.398575+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 0.509,
+    "trust_level": "MEDIUM",
+    "scenario": "Normal",
+    "critical": false,
+    "decision": {
+      "reasoning": "Medium trust score and sanity score, but failed fields and low severity indicate a need for human validation.",
+      "decision": "validate",
+      "action_required": "validation"
+    },
+    "result": "cloud_decided: validate"
+  },
+  {
+    "logged_at": "2026-07-06T10:16:09.188107+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:16:15.760825+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:16:22.261524+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:16:23.263078+00:00",
+    "sensor_id": "UNKNOWN_999",
+    "trust_score": 0.0,
+    "trust_level": "LOW",
+    "scenario": "N/A",
+    "critical": false,
+    "decision": {
+      "reasoning": "Unknown sensor identity: UNKNOWN_999"
+    },
+    "result": "rejected: Unknown sensor identity: UNKNOWN_999"
+  },
+  {
+    "logged_at": "2026-07-06T10:16:37.585602+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 0.509,
+    "trust_level": "MEDIUM",
+    "scenario": "Normal",
+    "critical": false,
+    "decision": {
+      "reasoning": "Medium trust score and sanity score, but failed fields and low severity indicate a need for human validation.",
+      "decision": "validate",
+      "action_required": "validation"
+    },
+    "result": "cloud_decided: validate"
+  },
+  {
+    "logged_at": "2026-07-06T10:16:44.216772+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:16:51.811380+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:16:58.328312+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:17:05.031514+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:17:20.403030+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 0.509,
+    "trust_level": "MEDIUM",
+    "scenario": "Normal",
+    "critical": false,
+    "decision": {
+      "reasoning": "Medium trust score and sanity score, but failed fields and low severity indicate a need for human validation.",
+      "decision": "validate",
+      "action_required": "validation"
+    },
+    "result": "cloud_decided: validate"
+  },
+  {
+    "logged_at": "2026-07-06T10:17:21.404892+00:00",
+    "sensor_id": "UNKNOWN_999",
+    "trust_score": 0.0,
+    "trust_level": "LOW",
+    "scenario": "N/A",
+    "critical": false,
+    "decision": {
+      "reasoning": "Unknown sensor identity: UNKNOWN_999"
+    },
+    "result": "rejected: Unknown sensor identity: UNKNOWN_999"
+  },
+  {
+    "logged_at": "2026-07-06T10:17:27.007393+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:17:34.503550+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:17:41.045446+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Normal",
+    "critical": false,
+    "decision": {
+      "reasoning": "High trust score and perfect sanity score justify acting locally on the sensor's recommendation.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:17:56.373177+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 0.509,
+    "trust_level": "MEDIUM",
+    "scenario": "Normal",
+    "critical": false,
+    "decision": {
+      "reasoning": "Medium trust score and sanity score, but failed fields and low severity indicate a need for human validation.",
+      "decision": "validate",
+      "action_required": "validation"
+    },
+    "result": "cloud_decided: validate"
+  },
+  {
+    "logged_at": "2026-07-06T10:18:03.018668+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:18:10.540270+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:18:11.541928+00:00",
+    "sensor_id": "UNKNOWN_999",
+    "trust_score": 0.0,
+    "trust_level": "LOW",
+    "scenario": "N/A",
+    "critical": false,
+    "decision": {
+      "reasoning": "Unknown sensor identity: UNKNOWN_999"
+    },
+    "result": "rejected: Unknown sensor identity: UNKNOWN_999"
+  },
+  {
+    "logged_at": "2026-07-06T10:18:17.115268+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:18:32.249957+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 0.509,
+    "trust_level": "MEDIUM",
+    "scenario": "Normal",
+    "critical": false,
+    "decision": {
+      "reasoning": "Medium trust score and sanity score, but failed fields and low severity indicate a need for human validation.",
+      "decision": "validate",
+      "action_required": "validation"
+    },
+    "result": "cloud_decided: validate"
+  },
+  {
+    "logged_at": "2026-07-06T10:18:39.858385+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Normal",
+    "critical": false,
+    "decision": {
+      "reasoning": "High trust score and perfect sanity score justify acting locally on the sensor's recommendation.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:18:46.504666+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:18:53.049708+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:19:00.530668+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:19:01.532918+00:00",
+    "sensor_id": "UNKNOWN_999",
+    "trust_score": 0.0,
+    "trust_level": "LOW",
+    "scenario": "N/A",
+    "critical": false,
+    "decision": {
+      "reasoning": "Unknown sensor identity: UNKNOWN_999"
+    },
+    "result": "rejected: Unknown sensor identity: UNKNOWN_999"
+  },
+  {
+    "logged_at": "2026-07-06T10:19:07.120970+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:19:14.631183+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:19:21.308866+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:19:27.843356+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:19:43.143367+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 0.509,
+    "trust_level": "MEDIUM",
+    "scenario": "Normal",
+    "critical": false,
+    "decision": {
+      "reasoning": "Medium trust score and sanity score, but failed fields and low severity indicate a need for human validation.",
+      "decision": "validate",
+      "action_required": "validation"
+    },
+    "result": "cloud_decided: validate"
+  },
+  {
+    "logged_at": "2026-07-06T10:19:49.749843+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:19:50.751900+00:00",
+    "sensor_id": "UNKNOWN_999",
+    "trust_score": 0.0,
+    "trust_level": "LOW",
+    "scenario": "N/A",
+    "critical": false,
+    "decision": {
+      "reasoning": "Unknown sensor identity: UNKNOWN_999"
+    },
+    "result": "rejected: Unknown sensor identity: UNKNOWN_999"
+  },
+  {
+    "logged_at": "2026-07-06T10:19:57.526775+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:20:04.077772+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:20:18.341099+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 0.509,
+    "trust_level": "MEDIUM",
+    "scenario": "Normal",
+    "critical": false,
+    "decision": {
+      "reasoning": "Medium trust score and sanity score, but failed fields and low severity indicate a need for human validation.",
+      "decision": "validate",
+      "action_required": "validation"
+    },
+    "result": "cloud_decided: validate"
+  },
+  {
+    "logged_at": "2026-07-06T10:20:25.987706+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:20:33.506991+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Water Shortage",
+    "critical": true,
+    "decision": {
+      "reasoning": "High trust score and critical scenario of water shortage justify immediate action.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:20:40.107805+00:00",
+    "sensor_id": "SENSOR_001",
+    "trust_score": 1.0,
+    "trust_level": "HIGH",
+    "scenario": "Normal",
+    "critical": false,
+    "decision": {
+      "reasoning": "High trust score and perfect sanity score justify acting locally on the sensor's recommendation.",
+      "decision": "act_locally",
+      "action_required": "irrigate"
+    },
+    "result": "irrigate_executed"
+  },
+  {
+    "logged_at": "2026-07-06T10:20:41.109964+00:00",
+    "sensor_id": "UNKNOWN_999",
+    "trust_score": 0.0,
+    "trust_level": "LOW",
+    "scenario": "N/A",
+    "critical": false,
+    "decision": {
+      "reasoning": "Unknown sensor identity: UNKNOWN_999"
+    },
+    "result": "rejected: Unknown sensor identity: UNKNOWN_999"
+  }
+]
