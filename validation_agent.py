@@ -1,16 +1,8 @@
-# validation_agent.py
-# Second opinion agent for MEDIUM trust decisions
-# Called when trust score is 0.5-0.8
-# LLM-powered - needs to reason about whether to confirm or escalate
+from __future__ import annotations
 
-from langchain_groq import ChatGroq
-from langchain_core.messages import SystemMessage, HumanMessage
-from dotenv import load_dotenv
-from pathlib import Path
-import os
 import json
 
-load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+from llm_factory import safe_invoke
 
 VALIDATION_PROMPT = """
 You are a validation agent in a smart farm fog layer pipeline.
@@ -33,45 +25,31 @@ Respond ONLY with this JSON, nothing else:
 }
 """
 
+VALIDATION_FALLBACK: dict = {
+    "verdict": "escalate",
+    "confidence": 0.0,
+    "reasoning": "Validation agent unavailable - escalating to cloud for safety",
+}
+
+
 class ValidationAgent:
+    """Second-opinion validator called when trust is MEDIUM (no local state)."""
 
-    def __init__(self):
-        self.llm = ChatGroq(
-            api_key=os.getenv("GROQ_API_KEY"),
-            model="llama-3.1-8b-instant",
-            temperature=0
-        )
-
-    def validate(self, decision: dict, context: dict = {}) -> dict:
+    def validate(self, decision: dict, context: dict | None = None) -> dict:
+        context = context or {}
         user_message = f"""
-        Main agent decision to validate:
-        {json.dumps(decision, indent=2)}
+Main agent decision to validate:
+{json.dumps(decision, indent=2)}
 
-        Pipeline context:
-        - Trust Score: {context.get('trust_score', 'unknown')}
-        - Scenario: {context.get('scenario', 'unknown')}
-        - Critical: {context.get('critical', False)}
-        - Sanity Score: {context.get('sanity_score', 'unknown')}
-        - Raw Readings Summary: {json.dumps(context.get('raw_readings', {}), indent=2)}
+Pipeline context:
+- Trust Score: {context.get('trust_score', 'unknown')}
+- Scenario: {context.get('scenario', 'unknown')}
+- Critical: {context.get('critical', False)}
+- Sanity Score: {context.get('sanity_score', 'unknown')}
+- Raw Readings Summary: {json.dumps(context.get('raw_readings', {}), indent=2)}
 
-        Should this decision be confirmed or escalated to cloud?
-        Respond ONLY with JSON.
-        """
+Should this decision be confirmed or escalated to cloud?
+Respond ONLY with JSON.
+"""
+        return safe_invoke(VALIDATION_PROMPT, user_message, VALIDATION_FALLBACK)
 
-        response = self.llm.invoke([
-            SystemMessage(content=VALIDATION_PROMPT),
-            HumanMessage(content=user_message)
-        ])
-
-        raw = response.content.strip()
-        raw = raw.replace("```json", "").replace("```", "").strip()
-
-        try:
-            return json.loads(raw)
-        except json.JSONDecodeError:
-            # safe fallback - escalate if unsure
-            return {
-                "verdict": "escalate",
-                "confidence": 0.0,
-                "reasoning": "Failed to parse validation response - escalating to be safe"
-            }

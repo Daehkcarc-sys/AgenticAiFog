@@ -1,16 +1,23 @@
-# main.py
-import pandas as pd
-from datetime import datetime, timezone, timedelta
-from pipeline import FogPipeline
-from dotenv import load_dotenv
-from pathlib import Path
+from __future__ import annotations
+
 import json
-import time
-import os
+import logging
+from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
-load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+import pandas as pd
 
-DATA_PATH = r"data\archive\Crop_recommendationV2.csv"
+from config import DATA_PATH
+from metrics import PipelineMetrics
+from pipeline import FogPipeline
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)-7s] %(name)s - %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger("main")
+
 
 def fake_tinyml_output(row: dict) -> dict:
     soil_moisture = row.get("soil_moisture", 50)
@@ -20,22 +27,24 @@ def fake_tinyml_output(row: dict) -> dict:
         action, confidence = "stop_irrigation", 0.88
     else:
         action, confidence = "no_action", 0.75
+
     return {
         "recommended_action": action,
         "confidence": confidence,
-        "anomaly_detected": False
+        "anomaly_detected": False,
     }
+
 
 def build_message(row: dict, sensor_id: str, scenario: str = "normal") -> dict:
     raw = {
         "soil_moisture": row.get("soil_moisture"),
-        "temperature":   row.get("temperature"),
-        "humidity":      row.get("humidity"),
-        "rainfall":      row.get("rainfall"),
-        "ph":            row.get("ph"),
-        "nitrogen":      row.get("N"),
-        "phosphorus":    row.get("P"),
-        "potassium":     row.get("K"),
+        "temperature": row.get("temperature"),
+        "humidity": row.get("humidity"),
+        "rainfall": row.get("rainfall"),
+        "ph": row.get("ph"),
+        "nitrogen": row.get("N"),
+        "phosphorus": row.get("P"),
+        "potassium": row.get("K"),
     }
 
     if scenario == "suspicious":
@@ -50,31 +59,36 @@ def build_message(row: dict, sensor_id: str, scenario: str = "normal") -> dict:
             "tinyml_output": {
                 "recommended_action": "irrigate",
                 "confidence": 0.95,
-                "anomaly_detected": False
-            }
+                "anomaly_detected": False,
+            },
+            "scenario": scenario,
         }
 
     return {
         "sensor_id": sensor_id,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "raw_readings": raw,
-        "tinyml_output": fake_tinyml_output(row)
+        "tinyml_output": fake_tinyml_output(row),
+        "scenario": scenario,
     }
 
-def print_summary():
-    with open("logs/decisions.json", "r") as f:
+
+def print_summary() -> None:
+    summary_path = Path("logs") / "decisions.json"
+    with summary_path.open("r", encoding="utf-8") as f:
         logs = json.load(f)
 
-    total  = len(logs)
-    high   = sum(1 for l in logs if l["trust_level"] == "HIGH")
+    total = len(logs)
+    high = sum(1 for l in logs if l["trust_level"] == "HIGH")
     medium = sum(1 for l in logs if l["trust_level"] == "MEDIUM")
-    low    = sum(1 for l in logs if l["trust_level"] == "LOW")
+    low = sum(1 for l in logs if l["trust_level"] == "LOW")
     critical = sum(1 for l in logs if l.get("critical"))
-    actions  = sum(1 for l in logs if "executed" in l["result"])
+    actions = sum(1 for l in logs if "executed" in l["result"])
     rejected = sum(1 for l in logs if "rejected" in l["result"])
+    latencies = [l.get("pipeline_latency_ms", 0.0) for l in logs if isinstance(l.get("pipeline_latency_ms"), (int, float))]
+    average_latency = round(sum(latencies) / len(latencies), 2) if latencies else 0.0
 
-    # scenario breakdown
-    scenarios = {}
+    scenarios: dict[str, int] = {}
     for l in logs:
         s = l.get("scenario", "N/A")
         scenarios[s] = scenarios.get(s, 0) + 1
@@ -87,6 +101,7 @@ def print_summary():
     print(f"  MEDIUM (validate)  : {medium}")
     print(f"  LOW   (rejected)   : {low}")
     print(f"  Critical events    : {critical}")
+    print(f"  Avg latency (ms)   : {average_latency}")
     print("-" * 45)
     print(f"  Actions executed   : {actions}")
     print(f"  Rejections         : {rejected}")
@@ -96,17 +111,22 @@ def print_summary():
         print(f"    {scenario}: {count}")
     print("=" * 45)
 
-def main():
-    # clear log each run
-    with open("logs/decisions.json", "w") as f:
-        json.dump([], f)
 
-    print("=== Fog Pipeline Starting ===\n")
+def main() -> None:
+    if not DATA_PATH.exists():
+        raise FileNotFoundError(f"Dataset not found: {DATA_PATH}")
+
+    logger.info("=== Fog Pipeline Starting ===")
     df = pd.read_csv(DATA_PATH)
-    pipeline = FogPipeline()
+    metrics = PipelineMetrics()
+    pipeline = FogPipeline(metrics=metrics)
+
+    log_file = Path("logs") / "decisions.json"
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    log_file.write_text("[]", encoding="utf-8")
 
     for i, row in df.head(50).iterrows():
-        print(f"─── Reading {i+1} ───────────────────────────")
+        logger.info("─── Reading %d ───────────────────────────", i + 1)
         if i % 7 == 0:
             sensor_id, scenario = "UNKNOWN_999", "normal"
         elif i % 5 == 0:
@@ -115,13 +135,21 @@ def main():
             sensor_id, scenario = "SENSOR_001", "normal"
 
         message = build_message(dict(row), sensor_id, scenario)
-        print(f"Sensor: {sensor_id} | Moisture: {message['raw_readings'].get('soil_moisture', 'N/A'):.1f}%")
+        moisture = message["raw_readings"].get("soil_moisture", float("nan"))
+        logger.info("Sensor: %s | Moisture: %.1f%%", sensor_id, moisture)
 
         result = pipeline.run(message)
-        print(f"Result: {result}\n")
-        time.sleep(1)
+        logger.info("Result: %s", result)
 
+    # ── Final reports ──────────────────────────────────────
+    print(metrics.report())
     print_summary()
+
+    # Persist metrics for offline analysis / publication figures
+    metrics_path = Path("logs") / "metrics.json"
+    metrics_path.write_text(json.dumps(metrics.to_dict(), indent=2), encoding="utf-8")
+    logger.info("Metrics saved to %s", metrics_path)
+
 
 if __name__ == "__main__":
     main()

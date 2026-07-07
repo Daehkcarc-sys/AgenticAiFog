@@ -1,15 +1,6 @@
-# Agent 6: Decision Agent
-# Final action decision based on full pipeline context
-# LLM-powered - needs reasoning across all previous agent outputs
+from __future__ import annotations
 
-from langchain_groq import ChatGroq
-from langchain_core.messages import SystemMessage, HumanMessage
-from dotenv import load_dotenv
-from pathlib import Path
-import os
-import json
-
-load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env")
+from llm_factory import safe_invoke
 
 DECISION_PROMPT = """
 You are the final decision agent in a smart farm fog layer pipeline.
@@ -29,46 +20,31 @@ Respond ONLY with this JSON, nothing else:
 }
 """
 
-class DecisionAgent:
+DECISION_FALLBACK: dict = {
+    "reasoning": "LLM unavailable - escalating to cloud for safety",
+    "decision": "escalate",
+    "action_required": "cloud",
+}
 
-    def __init__(self):
-        self.llm = ChatGroq(
-            api_key=os.getenv("GROQ_API_KEY"),
-            model="llama-3.1-8b-instant",
-            temperature=0
-        )
+
+class DecisionAgent:
+    """Final action decision agent (no local state)."""
 
     def run(self, pipeline_context: dict) -> dict:
         user_message = f"""
-        Complete pipeline context:
-        
-        Sensor ID: {pipeline_context.get('sensor_id')}
-        Trust Score: {pipeline_context.get('trust_score')}
-        Trust Level: {pipeline_context.get('trust_level')}
-        Sanity Score: {pipeline_context.get('sanity_score')}
-        Failed Fields: {pipeline_context.get('failed_fields', [])}
-        Critical: {pipeline_context.get('critical')}
-        Scenario: {pipeline_context.get('scenario')}
-        Severity: {pipeline_context.get('severity')}
-        TinyML Recommendation: {pipeline_context.get('tinyml_recommendation')}
-        
-        Make the final farm action decision.
-        Respond ONLY with JSON.
-        """
+Complete pipeline context:
 
-        response = self.llm.invoke([
-            SystemMessage(content=DECISION_PROMPT),
-            HumanMessage(content=user_message)
-        ])
+Sensor ID: {pipeline_context.get('sensor_id')}
+Trust Score: {pipeline_context.get('trust_score')}
+Trust Level: {pipeline_context.get('trust_level')}
+Sanity Score: {pipeline_context.get('sanity_score')}
+Failed Fields: {pipeline_context.get('failed_fields', [])}
+Critical: {pipeline_context.get('critical')}
+Scenario: {pipeline_context.get('scenario')}
+Severity: {pipeline_context.get('severity')}
+TinyML Recommendation: {pipeline_context.get('tinyml_recommendation')}
 
-        raw = response.content.strip()
-        raw = raw.replace("```json", "").replace("```", "").strip()
-
-        try:
-            return json.loads(raw)
-        except json.JSONDecodeError:
-            return {
-                "reasoning": "Failed to parse decision response",
-                "decision": "escalate",
-                "action_required": "cloud"
-            }
+Make the final farm action decision.
+Respond ONLY with JSON.
+"""
+        return safe_invoke(DECISION_PROMPT, user_message, DECISION_FALLBACK)

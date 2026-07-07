@@ -1,12 +1,13 @@
-# Agent 2: Timestamp Agent
-# Checks freshness, defends against replay attacks
-# Rules-based only - pure math, no LLM needed
+from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from config import FRESHNESS_LIMIT_SECONDS
+
+
 class TimestampAgent:
 
-    def __init__(self, freshness_limit_seconds: int = 300):
+    def __init__(self, freshness_limit_seconds: int = FRESHNESS_LIMIT_SECONDS):
         self.freshness_limit = freshness_limit_seconds
 
     def run(self, sensor_data: dict) -> dict:
@@ -25,7 +26,6 @@ class TimestampAgent:
             elif age_seconds < 600:
                 score = 0.3
             else:
-                # replay attack territory
                 return {
                     "passed": False,
                     "freshness_score": 0.0,

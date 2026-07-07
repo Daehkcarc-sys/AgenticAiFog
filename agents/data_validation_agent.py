@@ -1,17 +1,8 @@
-# Agent 1: Data Validation
-# Checks format, required fields, sensor identity
-# Rules-based only - no LLM needed, must be fast
+from __future__ import annotations
 
-SENSOR_REGISTRY = [
-    "SENSOR_001",
-    "SENSOR_002",
-    "SENSOR_003"
-]
+from config import ACTION_WHITELIST, REQUIRED_FIELDS
+from sensor_registry import SensorRegistry
 
-REQUIRED_FIELDS = [
-    "soil_moisture", "temperature", "humidity",
-    "rainfall", "ph", "nitrogen", "phosphorus", "potassium"
-]
 
 class DataValidationAgent:
 
@@ -20,33 +11,37 @@ class DataValidationAgent:
         raw_readings = sensor_data.get("raw_readings", {})
         tinyml_output = sensor_data.get("tinyml_output", {})
 
-        # check 1: sensor identity
-        if sensor_id.upper() not in SENSOR_REGISTRY:
+        if not SensorRegistry.is_registered(sensor_id):
             return {
                 "passed": False,
                 "reason": f"Unknown sensor identity: {sensor_id}"
             }
 
-        # check 2: required fields present
-        missing = [f for f in REQUIRED_FIELDS if f not in raw_readings]
+        missing = [field for field in REQUIRED_FIELDS if field not in raw_readings]
         if missing:
             return {
                 "passed": False,
                 "reason": f"Missing required fields: {missing}"
             }
 
-        # check 3: tinyml output present
-        if not tinyml_output:
+        if not isinstance(tinyml_output, dict) or not tinyml_output:
             return {
                 "passed": False,
                 "reason": "Missing TinyML output"
             }
 
-        # check 4: criticality flag present
-        if "recommended_action" not in tinyml_output:
+        action = tinyml_output.get("recommended_action")
+        if not action or action not in ACTION_WHITELIST:
             return {
                 "passed": False,
-                "reason": "TinyML output missing recommended_action"
+                "reason": f"Invalid TinyML recommended_action: {action}"
+            }
+
+        confidence = tinyml_output.get("confidence")
+        if not isinstance(confidence, (int, float)) or not 0.0 <= confidence <= 1.0:
+            return {
+                "passed": False,
+                "reason": f"Invalid TinyML confidence: {confidence}"
             }
 
         return {"passed": True, "reason": "Data validation passed"}
