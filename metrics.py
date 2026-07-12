@@ -38,6 +38,7 @@ class PipelineMetrics:
         self._decisions: defaultdict[str, int] = defaultdict(int)
         self._actions: defaultdict[str, int] = defaultdict(int)
         self._results: defaultdict[str, int] = defaultdict(int)
+        self._decision_sources: defaultdict[str, int] = defaultdict(int)
         self._total_readings: int = 0
 
     @contextmanager
@@ -61,6 +62,7 @@ class PipelineMetrics:
         decision: str,
         action: str,
         result: str,
+        source: str = "",
     ) -> None:
         """Record the outcome of a single pipeline reading.
 
@@ -73,6 +75,8 @@ class PipelineMetrics:
         self._decisions[decision] += 1
         self._actions[action] += 1
         self._results[result] += 1
+        if source:
+            self._decision_sources[source] += 1
 
     def report(self) -> str:
         """Return a formatted summary string suitable for console output."""
@@ -118,6 +122,14 @@ class PipelineMetrics:
                 pct = (count / self._total_readings) * 100 if self._total_readings else 0
                 lines.append(f"    {decision:<25s}  {count:5d}  ({pct:5.1f}%)")
 
+        # Decision source distribution
+        if self._decision_sources:
+            lines.append("-" * 50)
+            lines.append("  Decision Source:")
+            for source, count in sorted(self._decision_sources.items(), key=lambda x: -x[1]):
+                pct = (count / self._total_readings) * 100 if self._total_readings else 0
+                lines.append(f"    {source:<25s}  {count:5d}  ({pct:5.1f}%)")
+
         lines.append("=" * 50)
         return "\n".join(lines)
 
@@ -140,6 +152,7 @@ class PipelineMetrics:
                 "mean": round(statistics.mean(self._trust_scores), 4) if self._trust_scores else None,
                 "median": round(statistics.median(self._trust_scores), 4) if self._trust_scores else None,
                 "stdev": round(statistics.stdev(self._trust_scores), 4) if len(self._trust_scores) > 1 else None,
+            "decision_source_distribution": dict(self._decision_sources),
                 "min": round(min(self._trust_scores), 4) if self._trust_scores else None,
                 "max": round(max(self._trust_scores), 4) if self._trust_scores else None,
             },
@@ -157,5 +170,6 @@ class PipelineMetrics:
         self._scenarios.clear()
         self._decisions.clear()
         self._actions.clear()
+        self._decision_sources.clear()
         self._results.clear()
         self._total_readings = 0

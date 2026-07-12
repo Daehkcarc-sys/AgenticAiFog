@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 
 from config import DATA_PATH
+from decision_cache import DecisionCache
 from metrics import PipelineMetrics
 from pipeline import FogPipeline
 
@@ -119,7 +120,8 @@ def main() -> None:
     logger.info("=== Fog Pipeline Starting ===")
     df = pd.read_csv(DATA_PATH)
     metrics = PipelineMetrics()
-    pipeline = FogPipeline(metrics=metrics)
+    cache = DecisionCache(max_size=64, ttl_seconds=300)
+    pipeline = FogPipeline(metrics=metrics, cache=cache)
 
     log_file = Path("logs") / "decisions.json"
     log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -144,6 +146,16 @@ def main() -> None:
     # ── Final reports ──────────────────────────────────────
     print(metrics.report())
     print_summary()
+
+    # Cache statistics
+    cache_stats = pipeline.cache_stats
+    if cache_stats:
+        print(
+            f"\nDecision Cache: {cache_stats['hits']} hits / "
+            f"{cache_stats['misses']} misses "
+            f"({cache_stats['hit_rate']:.1%} hit rate, "
+            f"{cache_stats['size']}/{cache_stats['max_size']} entries)"
+        )
 
     # Persist metrics for offline analysis / publication figures
     metrics_path = Path("logs") / "metrics.json"

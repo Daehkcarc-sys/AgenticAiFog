@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from config import EARLY_EXIT_THRESHOLD
+from models import TrustScoreResult
 
 WEIGHTS = {
     "identity": 0.35,
@@ -10,14 +11,19 @@ WEIGHTS = {
 
 
 class TrustScoreAgent:
+    """Trust Layer — composite trust score from identity, freshness, consistency.
+
+    Returns a ``TrustScoreResult`` that supports both attribute access
+    (``.trust_score``) and dict-style access (``["trust_score"]``).
+    """
 
     def run(
         self,
         freshness_score: float,
         tinyml_output: dict,
         raw_readings: dict,
-    ) -> dict:
-        identity_score = 1.0
+    ) -> TrustScoreResult:
+        identity_score = 1.0  # already verified by DataValidationAgent
         consistency_score = self._check_consistency(raw_readings, tinyml_output)
 
         score = round(
@@ -28,14 +34,18 @@ class TrustScoreAgent:
         )
 
         passed = score >= EARLY_EXIT_THRESHOLD
-        reason = "Trust score above threshold" if passed else f"Trust score too low: {score}"
+        reason = (
+            "Trust score above threshold"
+            if passed
+            else f"Trust score too low: {score}"
+        )
 
-        return {
-            "passed": passed,
-            "trust_score": score,
-            "consistency_score": consistency_score,
-            "reason": reason,
-        }
+        return TrustScoreResult(
+            passed=passed,
+            trust_score=score,
+            consistency_score=consistency_score,
+            reason=reason,
+        )
 
     def _check_consistency(self, readings: dict, tinyml_output: dict) -> float:
         action = tinyml_output.get("recommended_action", "").lower()

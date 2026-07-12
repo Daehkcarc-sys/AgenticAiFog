@@ -1,3 +1,12 @@
+"""Enforcement Layer — Policy Enforcement Point (PEP) for the fog node.
+
+Routes decisions based on trust level, enforces action whitelists,
+and coordinates with the validation agent and cloud interface.
+
+Dependencies are injected via constructor so the pipeline retains full
+control over agent lifecycle and configuration.
+"""
+
 from __future__ import annotations
 
 from config import ACTION_WHITELIST
@@ -7,34 +16,57 @@ from validation_agent import ValidationAgent
 
 
 class ActionHandler:
-    """Policy Enforcement Point for the fog decision loop."""
+    """Policy Enforcement Point for the fog decision loop.
 
-    def __init__(self):
-        self.validation_agent = ValidationAgent()
-        self.cloud = CloudInterface()
+    Args:
+        validation_agent: Second-opinion validator for MEDIUM trust.
+        cloud: Cloud interface for escalation and rejection notification.
+    """
 
-    def route(self, action: str, decision: dict, trust_level: TrustLevel | str, context: dict | None = None) -> str:
+    def __init__(
+        self,
+        validation_agent: ValidationAgent | None = None,
+        cloud: CloudInterface | None = None,
+    ):
+        self.validation_agent = validation_agent or ValidationAgent()
+        self.cloud = cloud or CloudInterface()
+
+    def route(
+        self,
+        action: str,
+        decision: dict,
+        trust_level: TrustLevel | str,
+        context: dict | None = None,
+    ) -> str:
+        """Route a decision based on trust level.
+
+        - HIGH   → execute locally (whitelist-gated)
+        - MEDIUM → request validation → confirm or escalate
+        - LOW    → reject and notify cloud
+        """
         context = context or {}
         if trust_level == TrustLevel.HIGH:
             return self.execute(action)
         if trust_level == TrustLevel.MEDIUM:
             return self.request_validation(decision, context)
-
         return self.reject_and_alert(
             decision.get("reasoning", "low trust"),
             context,
         )
 
     def execute(self, action: str) -> str:
+        """Execute a whitelisted action locally."""
         if action not in ACTION_WHITELIST:
             return self.reject_and_alert(
                 f"Blocked action '{action}' - not in whitelist"
             )
-
         print(f"[ACTION] Executing: {action}")
         return f"{action}_executed"
 
-    def request_validation(self, decision: dict, context: dict | None = None) -> str:
+    def request_validation(
+        self, decision: dict, context: dict | None = None
+    ) -> str:
+        """Request a second opinion from the validation agent."""
         context = context or {}
         print("[VALIDATION] Requesting second opinion...")
         verdict = self.validation_agent.validate(decision, context)
@@ -43,14 +75,15 @@ class ActionHandler:
             f"(confidence: {verdict['confidence']}) "
             f"- {verdict['reasoning']}"
         )
-
         if verdict["verdict"] == "confirmed":
             return self.execute(decision.get("action_required", "no_action"))
-
         cloud_result = self.cloud.escalate({**context, "decision": decision})
         return f"cloud_decided: {cloud_result.get('cloud_decision')}"
 
-    def reject_and_alert(self, reason: str, context: dict | None = None) -> str:
+    def reject_and_alert(
+        self, reason: str, context: dict | None = None
+    ) -> str:
+        """Reject a decision and notify the cloud."""
         context = context or {}
         print(f"[REJECT] {reason}")
         self.cloud.notify_rejection(

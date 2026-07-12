@@ -39,6 +39,86 @@ class CriticalityScenario(str, Enum):
     EQUIPMENT_FAILURE = "Equipment failure"
 
 
+# ── Structured Agent Results ──────────────────────────────────
+
+
+class FogAgentResult:
+    """Base for structured agent outputs with dict-like backward compat.
+
+    Subclasses are ``@dataclass`` types that support both attribute
+    access (``result.passed``) and dict-style access (``result["passed"]``)
+    so existing pipeline code continues to work unchanged.
+    """
+
+    def __getitem__(self, key: str) -> Any:
+        return getattr(self, key)
+
+    def __contains__(self, key: str) -> bool:
+        return hasattr(self, key)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return getattr(self, key, default)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
+class ValidationResult(FogAgentResult):
+    """Output of DataValidationAgent."""
+    passed: bool
+    reason: str
+
+
+@dataclass
+class TimestampResult(FogAgentResult):
+    """Output of TimestampAgent."""
+    passed: bool
+    freshness_score: float
+    reason: str
+    age_seconds: float = 0.0
+
+
+@dataclass
+class TrustScoreResult(FogAgentResult):
+    """Output of TrustScoreAgent."""
+    passed: bool
+    trust_score: float
+    consistency_score: float
+    reason: str
+
+
+@dataclass
+class SanityResult(FogAgentResult):
+    """Output of ValueSanityAgent."""
+    passed: bool
+    sanity_score: float
+    failed_fields: list[str]
+    reason: str
+
+
+@dataclass
+class CriticalityResult(FogAgentResult):
+    """Output of CriticalityAgent."""
+    passed: bool
+    critical: bool
+    scenario: str
+    severity: str
+    reasoning: str
+
+
+@dataclass
+class DecisionResult(FogAgentResult):
+    """Output of DecisionAgent."""
+    reasoning: str
+    decision: str
+    action_required: str
+    source: str = "llm"  # "rule" | "cache" | "llm" | "cloud"
+
+
+# ── Data Models ───────────────────────────────────────────────
+
+
 @dataclass
 class TinyMLOutput:
     recommended_action: str
