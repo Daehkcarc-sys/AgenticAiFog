@@ -100,7 +100,7 @@ physically impossible readings never reach the Intelligence Layer.
 
 ### 2. Context Layer (External Dependency)
 
-*Implemented by another developer. Not part of this repository.*
+*Implemented by Aziza. Not part of this repository.*
 
 Will provide: historical trends, rolling averages, derived agricultural features,
 anomaly indicators, and semantic context. The Intelligence Layer is designed to
@@ -518,5 +518,6 @@ conference demo track**.  It provides:
 ## Authors
 
 Lion
+Zaaa
 
 
