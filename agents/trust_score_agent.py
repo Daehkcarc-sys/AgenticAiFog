@@ -11,10 +11,12 @@ WEIGHTS = {
 
 
 class TrustScoreAgent:
-    """Trust Layer — composite trust score from identity, freshness, consistency.
+    """Trust Layer — composite reliability score for Fog decision gating.
 
-    Returns a ``TrustScoreResult`` that supports both attribute access
-    (``.trust_score``) and dict-style access (``["trust_score"]``).
+    Combines identity (35%), freshness (25%), and TinyML consistency
+    (40%) into a single score.  This is a lightweight heuristic suitable
+    for real-time Fog assessment on Industrial PC / Jetson-class hardware,
+    not a formal trust calculus.
     """
 
     def run(

@@ -16,6 +16,7 @@ from agents import (
 from config import TRUST_LEVEL_THRESHOLDS
 from contracts import PipelineContext
 from decision_cache import DecisionCache
+from llm_factory import connectivity_stats, reset_connectivity_state
 from logger import FogLogger
 from metrics import PipelineMetrics
 from models import TrustLevel
@@ -150,6 +151,14 @@ class FogPipeline:
                 result=result,
                 source=decision_source,
             )
+            # Sync cache stats into metrics
+            if self._cache is not None:
+                cs = self._cache.stats
+                m.record_cache_event(hits=cs["hits"], misses=cs["misses"])
+            # Track degraded mode from connectivity state
+            conn = connectivity_stats()
+            if conn.get("degraded_mode_activations", 0) > 0:
+                m.record_degraded_activation()
 
         return result
 

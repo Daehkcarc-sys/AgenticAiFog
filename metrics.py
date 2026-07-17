@@ -1,8 +1,8 @@
 """Runtime metrics collection for the fog pipeline.
 
-Provides per-agent latency tracking, trust-score distributions, and
-decision-outcome histograms suitable for academic benchmarking and
-publication figures.
+Provides per-agent latency tracking, trust-score distributions,
+decision-outcome histograms, cache effectiveness, and connectivity
+statistics suitable for academic benchmarking and publication figures.
 
 Usage::
 
@@ -25,10 +25,11 @@ from typing import Iterator
 
 
 class PipelineMetrics:
-    """Collector for pipeline runtime statistics.
+    """Collector for fog pipeline runtime statistics.
 
     Tracks per-agent latencies, trust-score distributions, scenario
-    frequencies, and decision outcomes across a fog pipeline session.
+    frequencies, decision outcomes, decision sources, cache efficiency,
+    and degraded-mode activations across a pipeline session.
     """
 
     def __init__(self) -> None:
@@ -40,6 +41,10 @@ class PipelineMetrics:
         self._results: defaultdict[str, int] = defaultdict(int)
         self._decision_sources: defaultdict[str, int] = defaultdict(int)
         self._total_readings: int = 0
+        # Cache & connectivity counters (updated externally)
+        self._cache_hits: int = 0
+        self._cache_misses: int = 0
+        self._degraded_activations: int = 0
 
     @contextmanager
     def measure(self, agent_name: str) -> Iterator[None]:
@@ -64,11 +69,7 @@ class PipelineMetrics:
         result: str,
         source: str = "",
     ) -> None:
-        """Record the outcome of a single pipeline reading.
-
-        Call this once per ``FogPipeline.run()`` invocation to accumulate
-        distribution data for the final report.
-        """
+        """Record the outcome of a single pipeline reading."""
         self._total_readings += 1
         self._trust_scores.append(trust_score)
         self._scenarios[scenario] += 1
@@ -77,6 +78,15 @@ class PipelineMetrics:
         self._results[result] += 1
         if source:
             self._decision_sources[source] += 1
+
+    def record_cache_event(self, *, hits: int = 0, misses: int = 0) -> None:
+        """Accumulate cache hit/miss counters."""
+        self._cache_hits += hits
+        self._cache_misses += misses
+
+    def record_degraded_activation(self) -> None:
+        """Increment the degraded-mode activation counter."""
+        self._degraded_activations += 1
 
     def report(self) -> str:
         """Return a formatted summary string suitable for console output."""
@@ -92,7 +102,11 @@ class PipelineMetrics:
             lines.append("  Trust Score Distribution:")
             lines.append(f"    Mean   : {statistics.mean(self._trust_scores):.4f}")
             lines.append(f"    Median : {statistics.median(self._trust_scores):.4f}")
-            lines.append(f"    Stdev  : {statistics.stdev(self._trust_scores):.4f}" if len(self._trust_scores) > 1 else "    Stdev  : N/A")
+            lines.append(
+                f"    Stdev  : {statistics.stdev(self._trust_scores):.4f}"
+                if len(self._trust_scores) > 1
+                else "    Stdev  : N/A"
+            )
             lines.append(f"    Min    : {min(self._trust_scores):.4f}")
             lines.append(f"    Max    : {max(self._trust_scores):.4f}")
 
@@ -103,8 +117,15 @@ class PipelineMetrics:
             for agent_name, latencies in sorted(self._agent_latencies.items()):
                 avg = statistics.mean(latencies)
                 med = statistics.median(latencies)
-                p99 = sorted(latencies)[int(len(latencies) * 0.99)] if len(latencies) > 1 else latencies[0]
-                lines.append(f"    {agent_name:<20s}  avg={avg:8.2f}  median={med:8.2f}  p99={p99:8.2f}")
+                p99 = (
+                    sorted(latencies)[int(len(latencies) * 0.99)]
+                    if len(latencies) > 1
+                    else latencies[0]
+                )
+                lines.append(
+                    f"    {agent_name:<20s}  avg={avg:8.2f}  "
+                    f"median={med:8.2f}  p99={p99:8.2f}"
+                )
 
         # Scenario distribution
         if self._scenarios:
@@ -130,6 +151,29 @@ class PipelineMetrics:
                 pct = (count / self._total_readings) * 100 if self._total_readings else 0
                 lines.append(f"    {source:<25s}  {count:5d}  ({pct:5.1f}%)")
 
+        # LLM-free decision rate
+        if self._total_readings > 0 and self._decision_sources:
+            llm_free = sum(
+                v for k, v in self._decision_sources.items() if k != "llm"
+            )
+            pct = (llm_free / self._total_readings) * 100
+            lines.append("-" * 50)
+            lines.append(f"  LLM-Free Decisions   : {llm_free}/{self._total_readings}  ({pct:.1f}%)")
+
+        # Cache effectiveness
+        cache_total = self._cache_hits + self._cache_misses
+        if cache_total > 0:
+            lines.append("-" * 50)
+            lines.append("  Similarity Cache:")
+            lines.append(f"    Hits               : {self._cache_hits}")
+            lines.append(f"    Misses             : {self._cache_misses}")
+            lines.append(f"    Hit rate           : {self._cache_hits / cache_total:.1%}")
+
+        # Degraded mode
+        if self._degraded_activations > 0:
+            lines.append("-" * 50)
+            lines.append(f"  Degraded Mode        : {self._degraded_activations} activation(s)")
+
         lines.append("=" * 50)
         return "\n".join(lines)
 
@@ -141,10 +185,19 @@ class PipelineMetrics:
                 "count": len(latencies),
                 "avg_ms": round(statistics.mean(latencies), 3),
                 "median_ms": round(statistics.median(latencies), 3),
-                "p99_ms": round(sorted(latencies)[int(len(latencies) * 0.99)], 3) if len(latencies) > 1 else round(latencies[0], 3),
+                "p99_ms": (
+                    round(sorted(latencies)[int(len(latencies) * 0.99)], 3)
+                    if len(latencies) > 1
+                    else round(latencies[0], 3)
+                ),
                 "min_ms": round(min(latencies), 3),
                 "max_ms": round(max(latencies), 3),
             }
+
+        cache_total = self._cache_hits + self._cache_misses
+        llm_free = sum(
+            v for k, v in self._decision_sources.items() if k != "llm"
+        ) if self._decision_sources else 0
 
         return {
             "total_readings": self._total_readings,
@@ -152,7 +205,6 @@ class PipelineMetrics:
                 "mean": round(statistics.mean(self._trust_scores), 4) if self._trust_scores else None,
                 "median": round(statistics.median(self._trust_scores), 4) if self._trust_scores else None,
                 "stdev": round(statistics.stdev(self._trust_scores), 4) if len(self._trust_scores) > 1 else None,
-            "decision_source_distribution": dict(self._decision_sources),
                 "min": round(min(self._trust_scores), 4) if self._trust_scores else None,
                 "max": round(max(self._trust_scores), 4) if self._trust_scores else None,
             },
@@ -161,6 +213,14 @@ class PipelineMetrics:
             "decision_distribution": dict(self._decisions),
             "action_distribution": dict(self._actions),
             "result_distribution": dict(self._results),
+            "decision_source_distribution": dict(self._decision_sources),
+            "llm_free_decision_pct": round((llm_free / self._total_readings) * 100, 1) if self._total_readings else 0.0,
+            "cache": {
+                "hits": self._cache_hits,
+                "misses": self._cache_misses,
+                "hit_rate": round(self._cache_hits / cache_total, 3) if cache_total > 0 else 0.0,
+            },
+            "degraded_mode_activations": self._degraded_activations,
         }
 
     def reset(self) -> None:
@@ -170,6 +230,9 @@ class PipelineMetrics:
         self._scenarios.clear()
         self._decisions.clear()
         self._actions.clear()
-        self._decision_sources.clear()
         self._results.clear()
+        self._decision_sources.clear()
+        self._cache_hits = 0
+        self._cache_misses = 0
+        self._degraded_activations = 0
         self._total_readings = 0

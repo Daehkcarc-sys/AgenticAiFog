@@ -11,17 +11,16 @@ from models import SanityResult
 
 
 class ValueSanityAgent:
-    """Trust Layer — physical range + semantic consistency validation.
+    """Trust Layer — lightweight multi-level anomaly assessment.
 
-    Performs three levels of assessment:
-    1. Physical: each field within its valid range?
-    2. Statistical: extreme values that suggest sensor malfunction?
-    3. Semantic: do readings contradict the TinyML recommendation?
+    Designed for Fog nodes (Industrial PC, NVIDIA Jetson, server-class
+    gateway) running local inference.  Performs three rapid checks:
+    1. Physical range — each field within valid bounds?
+    2. Extreme outlier — value far beyond plausible range?
+    3. Semantic consistency — does TinyML recommendation contradict readings?
 
-    Returns a ``SanityResult`` with ``passed=False`` only when there is
-    high confidence that the data is invalid (e.g., physically impossible
-    values).  Minor anomalies are reported as warnings via ``anomalies``
-    so downstream agents can factor them into decisions.
+    Hard-rejects only on physically impossible values (e.g., temp=999).
+    All other anomalies are reported as warnings for downstream agents.
     """
 
     # Fields where any value outside the valid range is physically
