@@ -1,0 +1,4 @@
+-r requirements.txt
+python-dotenv>=1.0
+langchain-core>=0.3
+langchain-groq>=0.3

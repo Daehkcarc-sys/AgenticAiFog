@@ -13,10 +13,10 @@ from agents import (
     TrustScoreAgent,
     ValueSanityAgent,
 )
-from config import TRUST_LEVEL_THRESHOLDS
+from config import ACTION_WHITELIST, TRUST_LEVEL_THRESHOLDS
 from contracts import PipelineContext
 from decision_cache import DecisionCache
-from llm_factory import connectivity_stats, reset_connectivity_state
+from llm_factory import connectivity_stats
 from logger import FogLogger
 from metrics import PipelineMetrics
 from models import TrustLevel
@@ -62,13 +62,13 @@ class FogPipeline:
             v = self.data_validator.run(sensor_data)
         print(f"[Agent 1 - Validation] {'PASS' if v.passed else 'FAIL'} {v.reason}")
         if not v.passed:
-            return self._reject(sensor_id, v.reason, 0.0)
+            return self._reject(sensor_id, v.reason, 0.0, start_time)
 
         with (m.measure("timestamp") if m else _null_context()):
             t = self.timestamp_agent.run(sensor_data)
         print(f"[Agent 2 - Timestamp]  {'PASS' if t.passed else 'FAIL'} {t.reason}")
         if not t.passed:
-            return self._reject(sensor_id, t.reason, 0.0)
+            return self._reject(sensor_id, t.reason, 0.0, start_time)
 
         with (m.measure("trust_score") if m else _null_context()):
             ts = self.trust_scorer.run(
@@ -81,13 +81,13 @@ class FogPipeline:
             f"Score: {trust_score} | Level: {trust_level}"
         )
         if not ts.passed:
-            return self._reject(sensor_id, ts.reason, trust_score)
+            return self._reject(sensor_id, ts.reason, trust_score, start_time)
 
         with (m.measure("value_sanity") if m else _null_context()):
             s = self.sanity_agent.run(raw_readings, tinyml_output)
         print(f"[Agent 4 - Sanity]     {'PASS' if s.passed else 'FAIL'} {s.reason}")
         if not s.passed:
-            return self._reject(sensor_id, s.reason, trust_score)
+            return self._reject(sensor_id, s.reason, trust_score, start_time)
 
         # ── Intelligence Layer ────────────────────────────
         with (m.measure("criticality") if m else _null_context()):
@@ -107,6 +107,8 @@ class FogPipeline:
             "scenario": c.scenario,
             "severity": c.severity,
             "tinyml_recommendation": tinyml_output.get("recommended_action"),
+            "policy_allowed": tinyml_output.get("recommended_action")
+            in ACTION_WHITELIST,
         }
 
         with (m.measure("decision") if m else _null_context()):
@@ -151,14 +153,7 @@ class FogPipeline:
                 result=result,
                 source=decision_source,
             )
-            # Sync cache stats into metrics
-            if self._cache is not None:
-                cs = self._cache.stats
-                m.record_cache_event(hits=cs["hits"], misses=cs["misses"])
-            # Track degraded mode from connectivity state
-            conn = connectivity_stats()
-            if conn.get("degraded_mode_activations", 0) > 0:
-                m.record_degraded_activation()
+            self._sync_support_metrics()
 
         return result
 
@@ -178,11 +173,17 @@ class FogPipeline:
             return TrustLevel.MEDIUM
         return TrustLevel.LOW
 
-    def _reject(self, sensor_id: str, reason: str, score: float) -> str:
+    def _reject(
+        self,
+        sensor_id: str,
+        reason: str,
+        score: float,
+        start_time: float,
+    ) -> str:
         result = self.action_handler.reject_and_alert(
             reason, {"sensor_id": sensor_id}
         )
-        # Record the actual pipeline latency at rejection time
+        pipeline_latency_ms = round((perf_counter() - start_time) * 1000, 2)
         self.logger.log(
             sensor_id=sensor_id,
             trust_score=score,
@@ -191,9 +192,34 @@ class FogPipeline:
             result=result,
             scenario="N/A",
             critical=False,
-            additional={"pipeline_latency_ms": 0.0},
+            additional={"pipeline_latency_ms": pipeline_latency_ms},
         )
+        if self.metrics is not None:
+            self.metrics.record_reading(
+                trust_score=score,
+                scenario="N/A",
+                decision="reject",
+                action="cloud",
+                result=result,
+                source="rule",
+            )
+            self._sync_support_metrics()
         return result
+
+    def _sync_support_metrics(self) -> None:
+        """Synchronize absolute cache and connectivity counters."""
+        if self.metrics is None:
+            return
+        if self._cache is not None:
+            stats = self._cache.stats
+            self.metrics.set_cache_stats(
+                hits=stats["hits"],
+                misses=stats["misses"],
+            )
+        connectivity = connectivity_stats()
+        self.metrics.set_degraded_activations(
+            connectivity.get("degraded_mode_activations", 0)
+        )
 
 
 @contextmanager

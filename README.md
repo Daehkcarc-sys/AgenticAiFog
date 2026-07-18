@@ -316,7 +316,7 @@ metrics.to_dict()             # JSON-serializable for pandas/matplotlib
 | **Trust scores** | mean, median, stdev, min, max |
 | **Scenarios** | count + percentage per scenario |
 | **Decisions** | act_locally / validate / escalate counts |
-| **Decision sources** | rule / cache / llm / cloud breakdown |
+| **Decision sources** | rule / cache / llm / fallback / cloud breakdown |
 | **Actions** | irrigate / stop_irrigation / etc. distribution |
 | **Results** | executed / rejected / cloud_decided distribution |
 
@@ -378,7 +378,7 @@ AgenticAiFog/
 ### Prerequisites
 
 - Python 3.10+
-- [Groq API key](https://console.groq.com) (free tier works)
+- A Groq API key only when using optional online LLM mode
 
 ### Setup
 
@@ -396,22 +396,60 @@ venv\Scripts\activate
 # macOS / Linux
 source venv/bin/activate
 
-# 3. Install dependencies
-pip install langchain langchain-groq langchain-core python-dotenv pandas
+# 3. Install the deterministic/offline dependencies
+pip install -r requirements.txt
 
-# 4. Configure your Groq API key
+# 4. Run without an API key or network access
+python main.py --offline
+
+# 5. Optional: enable online Groq-backed reasoning
+pip install -r requirements-llm.txt
 echo "GROQ_API_KEY=gsk_your_key_here" > .env
-
-# 5. Run the demo (50 readings + full metrics report)
 python main.py
+
+# 6. Run the P0 safety and offline regression tests
+python -m unittest discover -s tests -v
+
+# 7. Compare the cloud-only (B0) and static-fog (B2) baselines
+# Seed 5 includes terrestrial, NTN, and offline periods.
+python -m simulation.experiment_runner --baseline all --seed 5
 ```
+
+The experiment generator uses the versioned telemetry contract in
+`simulation/telemetry_schema.py`. Environmental events and sensor faults have
+separate labels, and the same seeded record stream is evaluated by both
+baselines. The report includes decision coverage, latency, cloud traffic,
+communication cost, energy proxy, false-alarm rate, and per-class scores.
+
+### Prepare federated-learning client datasets
+
+```bash
+# Event-classification plumbing dataset: real device ownership and time splits,
+# but synthetic readings and labels.
+python -m federated.dataset_builder \
+  --source synthetic --clients 4 --seed 5 \
+  --output federated_output/synthetic
+
+# Bundled 2,200-row table: non-IID crop-recommendation proxy clients.
+python -m federated.dataset_builder \
+  --source crop-proxy --clients 4 --seed 5 \
+  --output federated_output/crop-proxy
+```
+
+Each output contains `client-XX/train.jsonl`, `validation.jsonl`, `test.jsonl`,
+and a top-level `manifest.json`. The manifest records the seed, task, split and
+partition strategies, class counts, and limitations. The crop table does not
+contain timestamps, device identities, sensor-fault labels, or the eight
+criticality scenarios, so it must not be presented as validation data for the
+fog criticality classifier.
 
 ### Environment Variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `GROQ_API_KEY` | Yes | — | Groq API key for LLM inference |
+| `GROQ_API_KEY` | Online only | - | Groq API key for LLM inference |
 | `GROQ_MODEL` | No | `llama-3.1-8b-instant` | Model name override for A/B testing |
+| `FOG_LLM_MODE` | No | `online` | Set to `offline` to disable SDK imports, probes, and API calls |
 
 ---
 

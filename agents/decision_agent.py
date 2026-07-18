@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from config import LOCAL_ACTION_MIN_SANITY_SCORE
 from decision_cache import DecisionCache
 from llm_factory import safe_invoke
 from models import DecisionResult, TrustLevel
@@ -73,11 +74,8 @@ class DecisionAgent:
         self._cache = cache
 
     def run(self, pipeline_context: dict[str, Any]) -> DecisionResult:
-        trust_level = pipeline_context.get("trust_level", TrustLevel.LOW)
-        tinyml_action = str(pipeline_context.get("tinyml_recommendation", ""))
-
         # ── Tier 1: deterministic rules ─────────────────
-        rule_result = self._try_rules(trust_level, tinyml_action)
+        rule_result = self._try_rules(pipeline_context)
         if rule_result is not None:
             return rule_result
 
@@ -105,14 +103,24 @@ class DecisionAgent:
 
     @staticmethod
     def _try_rules(
-        trust_level: TrustLevel | str,
-        tinyml_action: str,
+        pipeline_context: dict[str, Any],
     ) -> DecisionResult | None:
         """Attempt deterministic resolution.  Returns None if no rule matches."""
+        trust_level = pipeline_context.get("trust_level", TrustLevel.LOW)
+        tinyml_action = str(pipeline_context.get("tinyml_recommendation", ""))
+        critical = bool(pipeline_context.get("critical", False))
+        sanity_score = float(pipeline_context.get("sanity_score", 0.0))
+        failed_fields = pipeline_context.get("failed_fields", [])
+        policy_allowed = bool(pipeline_context.get("policy_allowed", False))
+
         # HIGH trust + simple action → act locally
         if (
             trust_level in (TrustLevel.HIGH, "HIGH")
             and tinyml_action in _HIGH_TRUST_ACTIONS
+            and not critical
+            and sanity_score >= LOCAL_ACTION_MIN_SANITY_SCORE
+            and not failed_fields
+            and policy_allowed
         ):
             return DecisionResult(
                 reasoning=(
@@ -164,5 +172,5 @@ class DecisionAgent:
             action_required=result.get(
                 "action_required", DECISION_FALLBACK["action_required"]
             ),
-            source="llm",
+            source="fallback" if result.get("_fallback_used") else "llm",
         )

@@ -20,15 +20,18 @@ import os
 import socket
 import time
 from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
-from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
-from langchain_groq import ChatGroq
-from pathlib import Path
+# Loading .env is optional so deterministic/offline operation requires no
+# LLM-specific packages. Online dependencies are imported lazily in get_llm.
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover - depends on optional installation
+    load_dotenv = None
 
-# Load environment once for the entire fog layer
-load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+if load_dotenv is not None:
+    load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +45,31 @@ _CONNECTIVITY_CACHE_SECONDS = 30.0  # re-check interval
 _llm_reachable: bool | None = None  # None = not checked yet
 _last_connectivity_check: float = 0.0
 _degraded_mode_activations: int = 0
+_offline_mode: bool = os.getenv("FOG_LLM_MODE", "online").lower() == "offline"
+
+
+def set_offline_mode(enabled: bool = True) -> None:
+    """Enable or disable explicit offline execution.
+
+    Offline mode never imports an LLM SDK, opens a socket, or retries a
+    request. Agents receive their deterministic safety fallback immediately.
+    """
+    global _offline_mode
+    _offline_mode = enabled
+
+
+def is_offline_mode() -> bool:
+    """Return whether explicit offline execution is enabled."""
+    return _offline_mode
+
+
+def _fallback_payload(fallback: dict[str, Any], reason: str) -> dict[str, Any]:
+    """Copy a fallback and mark it for accurate decision-source metrics."""
+    return {
+        **fallback,
+        "_fallback_used": True,
+        "_fallback_reason": reason,
+    }
 
 
 def is_llm_reachable() -> bool:
@@ -52,6 +80,9 @@ def is_llm_reachable() -> bool:
     every invocation.
     """
     global _llm_reachable, _last_connectivity_check, _degraded_mode_activations
+
+    if _offline_mode:
+        return False
 
     now = time.monotonic()
     if _llm_reachable is not None and (now - _last_connectivity_check) < _CONNECTIVITY_CACHE_SECONDS:
@@ -75,10 +106,14 @@ def is_llm_reachable() -> bool:
 
 def connectivity_stats() -> dict[str, Any]:
     """Return connectivity and degraded-mode statistics."""
+    seconds_since_check = None
+    if _last_connectivity_check > 0:
+        seconds_since_check = round(time.monotonic() - _last_connectivity_check, 1)
     return {
+        "offline_mode": _offline_mode,
         "llm_reachable": _llm_reachable,
         "degraded_mode_activations": _degraded_mode_activations,
-        "last_check_seconds_ago": round(time.monotonic() - _last_connectivity_check, 1),
+        "last_check_seconds_ago": seconds_since_check,
     }
 
 
@@ -97,8 +132,15 @@ def reset_connectivity_state() -> None:
 def get_llm(
     model: str | None = None,
     temperature: float = 0.0,
-) -> ChatGroq:
+) -> Any:
     """Return a cached ChatGroq instance."""
+    try:
+        from langchain_groq import ChatGroq
+    except ImportError as exc:
+        raise RuntimeError(
+            "Online LLM mode requires the packages in requirements-llm.txt"
+        ) from exc
+
     if model is None:
         model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
     return ChatGroq(
@@ -126,21 +168,31 @@ def safe_invoke(
     """
     from utils import safe_parse_json_response
 
+    if _offline_mode:
+        logger.info("Offline mode enabled - returning deterministic fallback")
+        return _fallback_payload(fallback, "offline_mode")
+
     # Skip retries entirely if endpoint is known unreachable
     if not is_llm_reachable():
         logger.warning("LLM unreachable — returning fallback immediately")
-        return fallback
+        return _fallback_payload(fallback, "endpoint_unreachable")
 
-    llm = get_llm()
-    messages: list[BaseMessage] = [
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=user_message),
-    ]
+    try:
+        from langchain_core.messages import HumanMessage, SystemMessage
+        llm = get_llm()
+    except (ImportError, RuntimeError) as exc:
+        logger.error("LLM dependencies unavailable: %s. Using fallback.", exc)
+        return _fallback_payload(fallback, "dependencies_unavailable")
+
+    messages = [SystemMessage(content=system_prompt), HumanMessage(content=user_message)]
 
     for attempt in range(max_retries + 1):
         try:
             response = llm.invoke(messages)
-            return safe_parse_json_response(str(response.content), fallback)
+            parsed = safe_parse_json_response(str(response.content), fallback)
+            if parsed is fallback:
+                return _fallback_payload(fallback, "invalid_llm_response")
+            return parsed
         except Exception as exc:
             if attempt < max_retries:
                 delay = _RETRY_DELAY_SECONDS * (2 ** attempt)
@@ -155,4 +207,4 @@ def safe_invoke(
                     max_retries + 1, exc,
                 )
 
-    return fallback
+    return _fallback_payload(fallback, "llm_call_failed")

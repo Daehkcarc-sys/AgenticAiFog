@@ -79,14 +79,14 @@ class PipelineMetrics:
         if source:
             self._decision_sources[source] += 1
 
-    def record_cache_event(self, *, hits: int = 0, misses: int = 0) -> None:
-        """Accumulate cache hit/miss counters."""
-        self._cache_hits += hits
-        self._cache_misses += misses
+    def set_cache_stats(self, *, hits: int = 0, misses: int = 0) -> None:
+        """Synchronize absolute cache counters without cumulative inflation."""
+        self._cache_hits = hits
+        self._cache_misses = misses
 
-    def record_degraded_activation(self) -> None:
-        """Increment the degraded-mode activation counter."""
-        self._degraded_activations += 1
+    def set_degraded_activations(self, count: int) -> None:
+        """Synchronize the absolute degraded-mode activation counter."""
+        self._degraded_activations = count
 
     def report(self) -> str:
         """Return a formatted summary string suitable for console output."""
