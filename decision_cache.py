@@ -1,54 +1,29 @@
-"""Lightweight semantic similarity cache for fog Intelligence Layer.
+"""Lightweight decision cache for the fog Intelligence Layer.
 
 Avoids redundant LLM calls by reusing recent decisions when the current
-context falls into the same *semantic bucket* as a cached entry.  Rather
-than performing expensive vector similarity search, continuous features
-are discretized into coarse buckets (LOW/MEDIUM/HIGH) so that O(1) dict
-lookup suffices.
+context is similar enough to a cached entry.  Designed for constrained
+Fog nodes (Raspberry Pi, Jetson Nano, industrial gateways).
 
-Designed for constrained Fog nodes (Industrial PC, NVIDIA Jetson, server-
-class gateway).  No external dependencies, bounded memory, configurable
-TTL and eviction policy.
+Usage::
 
-Trade-offs vs. exact matching:
-  - PRO: higher hit rate — similar-but-not-identical contexts match.
-  - PRO: O(1) lookup via dict key, no ANN index needed.
-  - CON: possible false positives — different contexts may map to the
-    same bucket.  Mitigated by the ActionHandler PEP which enforces
-    the action whitelist regardless of cache output.
-  - CON: bucket boundaries are fixed — tuning requires code changes.
+    cache = DecisionCache(max_size=64, similarity_threshold=0.90)
+    cached = cache.lookup(trust_score=0.95, scenario="Water deficit", ...)
+    if cached:
+        return cached  # cache hit — no LLM needed
+    result = llm_decision(...)
+    cache.store(signature, result)
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
-# ── Semantic bucket thresholds ──────────────────────────────
-
-
-def _bucket_trust(score: float) -> str:
-    """Discretize trust score into 0.05 buckets → ~20 possible values."""
-    return f"{round(score / 0.05) * 0.05:.2f}"
-
-
-def _bucket_sanity(score: float) -> str:
-    """Discretize sanity score into 3 semantic buckets."""
-    if score >= 0.9:
-        return "HIGH"       # all or nearly all fields OK
-    if score >= 0.5:
-        return "MEDIUM"     # some fields out of range
-    return "LOW"            # most fields suspect
-
-
-def _resolve_level(raw: Any) -> str:
-    """Resolve trust_level enum or string to canonical string."""
-    return raw.value if hasattr(raw, "value") else str(raw)
-
-
-# ── Cache data structures ───────────────────────────────────
+from config import CACHE_PATH
 
 
 @dataclass
@@ -61,30 +36,30 @@ class CacheEntry:
 
 
 class DecisionCache:
-    """Semantic similarity cache for fog-layer decisions.
+    """Bounded in-memory cache for fog-layer decisions.
 
-    Each context is reduced to a *semantic signature* by bucketing
-    continuous features and keeping categorical features as-is.  Two
-    contexts that produce the same signature are considered similar
-    enough to share a decision.
+    Keys are derived from a hash of the decision context.  When a lookup
+    is requested the cache checks whether the current context is *similar
+    enough* to any cached entry by comparing discretized trust scores,
+    scenario labels, and sensor health indicators.
 
     Design constraints for Fog nodes:
-    - O(1) dict lookup (no ANN, no vector DB)
-    - Bounded memory (configurable ``max_size``, FIFO eviction)
-    - Configurable TTL for stale entry expiration
+    - Bounded memory (configurable ``max_size``)
+    - O(1) lookup via dict key
     - No external dependencies
+    - Optional TTL for stale entry eviction
     """
 
     def __init__(
         self,
         max_size: int = 64,
         ttl_seconds: float = 300.0,
+        path: Path | None = CACHE_PATH,
     ) -> None:
         """
         Args:
-            max_size: Maximum cached entries (FIFO eviction when full).
+            max_size: Maximum number of cached entries (FIFO eviction).
             ttl_seconds: Entries older than this are considered stale.
-                         Set to 0 to disable TTL eviction.
         """
         self._max_size = max_size
         self._ttl_seconds = ttl_seconds
@@ -93,16 +68,17 @@ class DecisionCache:
         self._hits: int = 0
         self._misses: int = 0
         self._evictions: int = 0
+        self._path = path
+        self._load()
 
     # ── public API ──────────────────────────────────────────
 
     def lookup(self, context: dict[str, Any]) -> dict[str, Any] | None:
-        """Return a cached decision for a semantically similar context, or None.
+        """Return a cached decision if one matches *context*, else None.
 
-        The *context* is reduced to a semantic signature (bucketed trust,
-        bucketed sanity, categorical scenario/severity/action).  If a
-        matching signature exists and has not expired, its decision is
-        returned and the hit counter incremented.
+        The context is hashed to produce a lookup key.  If a matching
+        entry exists and has not expired, it is returned and its hit
+        counter incremented.
         """
         self._evict_expired()
         key = self._make_key(context)
@@ -117,11 +93,11 @@ class DecisionCache:
         return entry.decision
 
     def store(self, context: dict[str, Any], decision: dict[str, Any]) -> None:
-        """Persist a decision indexed by its semantic signature."""
+        """Persist a decision indexed by its context."""
         self._evict_expired()
         key = self._make_key(context)
 
-        # FIFO eviction when at capacity and adding a new key
+        # Evict oldest if at capacity (FIFO)
         if len(self._store) >= self._max_size and key not in self._store:
             old_key = self._insertion_order.pop(0)
             del self._store[old_key]
@@ -130,6 +106,7 @@ class DecisionCache:
         self._store[key] = CacheEntry(decision=decision)
         if key not in self._insertion_order:
             self._insertion_order.append(key)
+        self._persist()
 
     @property
     def stats(self) -> dict[str, Any]:
@@ -150,36 +127,40 @@ class DecisionCache:
         self._store.clear()
         self._insertion_order.clear()
         self._hits = 0
-        self._misses = 0
         self._evictions = 0
+        self._misses = 0
+        self._persist()
 
     # ── internals ───────────────────────────────────────────
 
     @staticmethod
     def _make_key(context: dict[str, Any]) -> str:
-        """Build a semantic signature key from the decision context.
+        """Produce a stable hash key from the decision context.
 
-        Continuous features are discretized into coarse buckets so that
-        similar-but-not-identical readings map to the same key.  Only
-        features that affect decision-making are included.
-
-        Bucketing strategy:
-        - trust_score  → 0.05 buckets (~20 possible values)
-        - sanity_score → LOW / MEDIUM / HIGH (3 buckets)
-        - scenario, severity, tinyml_action → kept as-is (categorical)
-        - critical → boolean
-        - trust_level → canonical string (HIGH / MEDIUM / LOW)
+        Only the fields that affect decision-making are hashed so that
+        minor variations (e.g. raw_readings timestamps) don't cause
+        unnecessary cache misses.
         """
+        # Discretize trust score into 0.05 buckets to increase hit rate
+        trust = context.get("trust_score", 0.0)
+        trust_bucket = round(trust / 0.05) * 0.05
+
+        # Resolve trust_level to its string value (handles enum members)
+        raw_level = context.get("trust_level", "")
+        level_str = raw_level.value if hasattr(raw_level, "value") else str(raw_level)
+
         signature = {
-            "t": _bucket_trust(context.get("trust_score", 0.0)),
-            "tl": _resolve_level(context.get("trust_level", "")),
-            "s": _bucket_sanity(context.get("sanity_score", 1.0)),
-            "sc": context.get("scenario", ""),
-            "sv": context.get("severity", ""),
-            "cr": context.get("critical", False),
-            "ta": context.get("tinyml_recommendation", ""),
+            "trust_bucket": trust_bucket,
+            "trust_level": level_str,
+            "scenario": context.get("scenario", ""),
+            "severity": context.get("severity", ""),
+            "critical": context.get("critical", False),
+            "sanity_score": round(context.get("sanity_score", 1.0), 2),
+            "tinyml_action": context.get("tinyml_recommendation", ""),
         }
-        return json.dumps(signature, sort_keys=True)
+
+        raw = json.dumps(signature, sort_keys=True)
+        return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
     def _evict_expired(self) -> None:
         """Remove entries older than ``_ttl_seconds``."""
@@ -195,3 +176,40 @@ class DecisionCache:
             del self._store[k]
             if k in self._insertion_order:
                 self._insertion_order.remove(k)
+        if expired:
+            self._persist()
+
+    def _load(self) -> None:
+        if self._path is None or not self._path.exists():
+            return
+        try:
+            data = json.loads(self._path.read_text(encoding="utf-8"))
+            self._store = {
+                key: CacheEntry(
+                    decision=value["decision"],
+                    stored_at=value["stored_at"],
+                    hit_count=value.get("hit_count", 0),
+                )
+                for key, value in data.get("store", {}).items()
+            }
+            self._insertion_order = data.get("insertion_order", list(self._store))
+        except (json.JSONDecodeError, KeyError, TypeError):
+            self._store = {}
+            self._insertion_order = []
+
+    def _persist(self) -> None:
+        if self._path is None:
+            return
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        data = {
+            "store": {
+                key: {
+                    "decision": entry.decision,
+                    "stored_at": entry.stored_at,
+                    "hit_count": entry.hit_count,
+                }
+                for key, entry in self._store.items()
+            },
+            "insertion_order": self._insertion_order,
+        }
+        self._path.write_text(json.dumps(data, indent=2), encoding="utf-8")

@@ -41,6 +41,7 @@ Before deciding, consider:
 - Does the recommended action match the sensor readings?
 - Is the criticality scenario consistent with the data?
 - Are any sensor fields outside their valid range?
+- Do recent context trends or anomalies change the risk?
 - Would a wrong decision cause crop damage?
 
 Respond ONLY with this JSON, nothing else:
@@ -154,6 +155,11 @@ class DecisionAgent:
             f"Scenario: {pipeline_context.get('scenario')}\n"
             f"Severity: {pipeline_context.get('severity')}\n"
             f"TinyML Recommendation: {pipeline_context.get('tinyml_recommendation')}\n\n"
+            f"Semantic Context: {pipeline_context.get('semantic_context')}\n"
+            f"Rolling Averages: {pipeline_context.get('rolling_averages', {})}\n"
+            f"Trends: {pipeline_context.get('trends', {})}\n"
+            f"Derived Features: {pipeline_context.get('derived_features', {})}\n"
+            f"Anomaly Indicators: {pipeline_context.get('anomaly_indicators', {})}\n\n"
             f"Make the final farm action decision.\n"
             f"Respond ONLY with JSON."
         )

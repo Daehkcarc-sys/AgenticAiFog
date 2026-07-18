@@ -9,6 +9,7 @@ control over agent lifecycle and configuration.
 
 from __future__ import annotations
 
+from actuator_adapters import ActuatorAdapter, build_actuator_adapter, make_command
 from config import ACTION_WHITELIST
 from cloud_interface import CloudInterface
 from models import TrustLevel
@@ -27,9 +28,11 @@ class ActionHandler:
         self,
         validation_agent: ValidationAgent | None = None,
         cloud: CloudInterface | None = None,
+        actuator: ActuatorAdapter | None = None,
     ):
         self.validation_agent = validation_agent or ValidationAgent()
         self.cloud = cloud or CloudInterface()
+        self.actuator = actuator or build_actuator_adapter()
 
     def route(
         self,
@@ -46,7 +49,7 @@ class ActionHandler:
         """
         context = context or {}
         if trust_level == TrustLevel.HIGH:
-            return self.execute(action)
+            return self.execute(action, context)
         if trust_level == TrustLevel.MEDIUM:
             return self.request_validation(decision, context)
         return self.reject_and_alert(
@@ -54,14 +57,14 @@ class ActionHandler:
             context,
         )
 
-    def execute(self, action: str) -> str:
+    def execute(self, action: str, context: dict | None = None) -> str:
         """Execute a whitelisted action locally."""
         if action not in ACTION_WHITELIST:
             return self.reject_and_alert(
                 f"Blocked action '{action}' - not in whitelist"
             )
-        print(f"[ACTION] Executing: {action}")
-        return f"{action}_executed"
+        print(f"[ACTION] Dispatching: {action}")
+        return self.actuator.execute(make_command(action, context))
 
     def request_validation(
         self, decision: dict, context: dict | None = None
@@ -76,7 +79,7 @@ class ActionHandler:
             f"- {verdict['reasoning']}"
         )
         if verdict["verdict"] == "confirmed":
-            return self.execute(decision.get("action_required", "no_action"))
+            return self.execute(decision.get("action_required", "no_action"), context)
         cloud_result = self.cloud.escalate({**context, "decision": decision})
         return f"cloud_decided: {cloud_result.get('cloud_decision')}"
 
@@ -91,4 +94,3 @@ class ActionHandler:
             reason=reason,
         )
         return f"rejected: {reason}"
-

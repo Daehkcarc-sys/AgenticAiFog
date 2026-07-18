@@ -98,6 +98,20 @@ class SanityResult(FogAgentResult):
 
 
 @dataclass
+class ContextResult(FogAgentResult):
+    """Output of ContextManagerAgent."""
+    passed: bool
+    history_count: int
+    rolling_averages: Dict[str, float]
+    trends: Dict[str, float]
+    variances: Dict[str, float]
+    derived_features: Dict[str, Any]
+    anomaly_indicators: Dict[str, Any]
+    semantic_context: str
+    reason: str
+
+
+@dataclass
 class CriticalityResult(FogAgentResult):
     """Output of CriticalityAgent."""
     passed: bool

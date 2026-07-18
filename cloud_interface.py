@@ -6,7 +6,9 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
+from cloud_sync import DEFAULT_CLOUD_TOPIC, ModelUpdateStore, build_cloud_publisher
 from llm_factory import safe_invoke
 
 CLOUD_PROMPT = """
@@ -35,10 +37,17 @@ CLOUD_FALLBACK: dict = {
 
 
 class CloudInterface:
-    """Simulated cloud layer with LLM-powered global decision making."""
+    """Cloud integration with durable publish adapters and model updates."""
+
+    def __init__(self) -> None:
+        self.uploaded_summaries: list[dict[str, Any]] = []
+        self.received_model_updates: list[dict[str, Any]] = []
+        self.publisher = build_cloud_publisher()
+        self.model_store = ModelUpdateStore()
 
     def escalate(self, context: dict) -> dict:
-        print("[KAFKA] Publishing to 'fog-decisions' topic")
+        self.publisher.publish("fog-decisions", context)
+        print("[CLOUD] Published escalation to 'fog-decisions'")
         print("[CLOUD] Global platform processing...")
 
         user_message = f"""
@@ -57,5 +66,31 @@ Respond ONLY with JSON.
         return safe_invoke(CLOUD_PROMPT, user_message, CLOUD_FALLBACK)
 
     def notify_rejection(self, sensor_id: str, reason: str) -> None:
-        print(f"[KAFKA] Publishing rejection event to 'trust-events' topic")
+        self.publisher.publish(
+            "trust-events",
+            {"sensor_id": sensor_id, "reason": reason},
+        )
+        print(f"[CLOUD] Published rejection event to 'trust-events' topic")
         print(f"[CLOUD] Logging rejection for sensor {sensor_id}: {reason}")
+
+    def upload_summary(self, summary: dict[str, Any]) -> None:
+        """Upload compact fog summaries through the configured publisher."""
+        status = self.publisher.publish(DEFAULT_CLOUD_TOPIC, summary)
+        print(f"[CLOUD] Summary publish status: {status}")
+        self.uploaded_summaries.append(summary)
+
+    def receive_model_update(self, update: dict[str, Any]) -> None:
+        """Install and activate a validated model update."""
+        installed = self.model_store.install_update(update)
+        self.received_model_updates.append(installed)
+
+    def rollback_model(self, version: str | None = None) -> dict[str, Any]:
+        return self.model_store.rollback(version)
+
+    def sync_status(self) -> dict[str, Any]:
+        return {
+            "uploaded_summaries": len(self.uploaded_summaries),
+            "model_updates": len(self.received_model_updates),
+            "model_store": self.model_store.status(),
+            "publisher": type(self.publisher).__name__,
+        }

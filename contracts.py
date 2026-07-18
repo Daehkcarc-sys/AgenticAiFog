@@ -22,6 +22,17 @@ class PipelineContext(TypedDict, total=False):
     scenario: str
     severity: str
     tinyml_recommendation: str | None
+    context: dict
+    semantic_context: str
+    rolling_averages: dict[str, float]
+    trends: dict[str, float]
+    derived_features: dict
+    anomaly_indicators: dict
+    multi_level_anomalies: dict
+    resource_snapshot: dict
+    connectivity: dict
+    local_rules: dict
+    security: dict
     raw_readings: dict
     decision: dict
 

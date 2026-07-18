@@ -5,5 +5,8 @@ __pycache__/
 *.pyc
 *.jpg
 logs/*.json
+logs/*.jsonl
+logs/queues/
+state/
 randomstuff.py
 test_quick.py

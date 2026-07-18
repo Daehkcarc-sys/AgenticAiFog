@@ -5,7 +5,9 @@ from time import perf_counter
 from typing import Iterator
 
 from action_handler import ActionHandler
+from anomaly_detector import MultiLevelAnomalyDetector
 from agents import (
+    ContextManagerAgent,
     CriticalityAgent,
     DataValidationAgent,
     DecisionAgent,
@@ -16,10 +18,16 @@ from agents import (
 from config import TRUST_LEVEL_THRESHOLDS
 from contracts import PipelineContext
 from decision_cache import DecisionCache
-from llm_factory import connectivity_stats, reset_connectivity_state
 from logger import FogLogger
 from metrics import PipelineMetrics
 from models import TrustLevel
+from support_services import (
+    CloudSyncStore,
+    ConnectivityManager,
+    LocalRuleStore,
+    ResourceMonitor,
+    SecurityAccessControl,
+)
 
 
 class FogPipeline:
@@ -42,12 +50,19 @@ class FogPipeline:
         self.timestamp_agent = TimestampAgent()
         self.trust_scorer = TrustScoreAgent()
         self.sanity_agent = ValueSanityAgent()
+        self.context_manager = ContextManagerAgent()
+        self.anomaly_detector = MultiLevelAnomalyDetector()
         self.criticality_agent = CriticalityAgent()
         self.decision_agent = DecisionAgent(cache=cache)
         self.action_handler = ActionHandler()
         self.logger = FogLogger()
         self.metrics = metrics
         self._cache = cache
+        self.resource_monitor = ResourceMonitor()
+        self.connectivity_manager = ConnectivityManager()
+        self.local_rule_store = LocalRuleStore()
+        self.security = SecurityAccessControl()
+        self.cloud_sync = CloudSyncStore()
 
     def run(self, sensor_data: dict) -> str:
         sensor_id = sensor_data.get("sensor_id")
@@ -63,6 +78,16 @@ class FogPipeline:
         print(f"[Agent 1 - Validation] {'PASS' if v.passed else 'FAIL'} {v.reason}")
         if not v.passed:
             return self._reject(sensor_id, v.reason, 0.0)
+        security_context = self.security.audit_context(sensor_id, sensor_data=sensor_data)
+        self.security.append_audit(
+            {
+                "sensor_id": sensor_id,
+                "event": "data_validation_passed",
+                "security": security_context,
+            }
+        )
+        if security_context.get("signature_valid") is False:
+            return self._reject(sensor_id, "Invalid sensor signature", 0.0)
 
         with (m.measure("timestamp") if m else _null_context()):
             t = self.timestamp_agent.run(sensor_data)
@@ -89,9 +114,39 @@ class FogPipeline:
         if not s.passed:
             return self._reject(sensor_id, s.reason, trust_score)
 
+        # ── Context Layer ─────────────────────────────────
+        with (m.measure("context") if m else _null_context()):
+            cx = self.context_manager.run(sensor_id, raw_readings, tinyml_output)
+        print(
+            f"[Agent 2 - Context]    {'PASS' if cx.passed else 'FAIL'} "
+            f"{cx.reason} | {cx.semantic_context}"
+        )
+
+        with (m.measure("anomaly_detection") if m else _null_context()):
+            anomaly_report = self.anomaly_detector.run(
+                raw_readings=raw_readings,
+                history=self.context_manager.history_for_sensor(sensor_id),
+                context=cx.to_dict(),
+            )
+        print(
+            f"[Agent 2 - Anomaly]    Severity: {anomaly_report.severity} "
+            f"| Score: {anomaly_report.score}"
+        )
+
+        resource_snapshot = self.resource_monitor.snapshot()
+        connectivity_status = self.connectivity_manager.status()
+        context_payload = {
+            **cx.to_dict(),
+            "multi_level_anomalies": anomaly_report.to_dict(),
+        }
+
         # ── Intelligence Layer ────────────────────────────
         with (m.measure("criticality") if m else _null_context()):
-            c = self.criticality_agent.run(raw_readings, tinyml_output)
+            c = self.criticality_agent.run(
+                raw_readings,
+                tinyml_output,
+                context=context_payload,
+            )
         print(
             f"[Agent 5 - Criticality] {'!!' if c.critical else 'OK'} "
             f"Scenario: {c.scenario} | Severity: {c.severity}"
@@ -107,6 +162,17 @@ class FogPipeline:
             "scenario": c.scenario,
             "severity": c.severity,
             "tinyml_recommendation": tinyml_output.get("recommended_action"),
+            "context": context_payload,
+            "semantic_context": cx.semantic_context,
+            "rolling_averages": cx.rolling_averages,
+            "trends": cx.trends,
+            "derived_features": cx.derived_features,
+            "anomaly_indicators": cx.anomaly_indicators,
+            "multi_level_anomalies": anomaly_report.to_dict(),
+            "resource_snapshot": resource_snapshot.to_dict(),
+            "connectivity": connectivity_status,
+            "local_rules": self.local_rule_store.to_dict(),
+            "security": security_context,
         }
 
         with (m.measure("decision") if m else _null_context()):
@@ -125,6 +191,25 @@ class FogPipeline:
             trust_level,
             context={**context, "raw_readings": raw_readings},
         )
+        security_context["action_authorized"] = self.security.authorize_action(
+            d.action_required
+        )
+
+        sync_summary = {
+            "sensor_id": sensor_id,
+            "trust_score": trust_score,
+            "scenario": c.scenario,
+            "decision": d.decision,
+            "result": result,
+            "context_summary": cx.semantic_context,
+            "anomaly_severity": anomaly_report.severity,
+            "connectivity": connectivity_status,
+        }
+        self.cloud_sync.enqueue_summary(sync_summary)
+        if not connectivity_status.get("offline_mode"):
+            for queued_summary in self.cloud_sync.drain():
+                self.action_handler.cloud.upload_summary(queued_summary)
+            self.connectivity_manager.mark_cloud_success()
 
         # ── Logging & Metrics ─────────────────────────────
         pipeline_latency_ms = round((perf_counter() - start_time) * 1000, 2)
@@ -139,6 +224,15 @@ class FogPipeline:
             additional={
                 "pipeline_latency_ms": pipeline_latency_ms,
                 "decision_source": decision_source,
+                "context_summary": cx.semantic_context,
+                "context_history_count": cx.history_count,
+                "context_anomalies": cx.anomaly_indicators,
+                "multi_level_anomalies": anomaly_report.to_dict(),
+                "resource_snapshot": resource_snapshot.to_dict(),
+                "connectivity": connectivity_status,
+                "security": security_context,
+                "cloud_sync_pending": self.cloud_sync.pending_count(),
+                "cloud_sync_status": self.action_handler.cloud.sync_status(),
             },
         )
 
@@ -151,14 +245,6 @@ class FogPipeline:
                 result=result,
                 source=decision_source,
             )
-            # Sync cache stats into metrics
-            if self._cache is not None:
-                cs = self._cache.stats
-                m.record_cache_event(hits=cs["hits"], misses=cs["misses"])
-            # Track degraded mode from connectivity state
-            conn = connectivity_stats()
-            if conn.get("degraded_mode_activations", 0) > 0:
-                m.record_degraded_activation()
 
         return result
 
@@ -179,6 +265,9 @@ class FogPipeline:
         return TrustLevel.LOW
 
     def _reject(self, sensor_id: str, reason: str, score: float) -> str:
+        self.security.append_audit(
+            {"sensor_id": sensor_id, "event": "rejected", "reason": reason}
+        )
         result = self.action_handler.reject_and_alert(
             reason, {"sensor_id": sensor_id}
         )

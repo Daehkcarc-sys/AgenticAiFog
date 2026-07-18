@@ -7,12 +7,10 @@ from models import TimestampResult
 
 
 class TimestampAgent:
-    """Trust Layer — lightweight freshness assessment for Fog nodes.
+    """Trust Layer — replay-attack detection via timestamp freshness scoring.
 
-    Performs a rapid timestamp check (not a full cryptographic replay
-    detection) suitable for resource-constrained Fog hardware such as
-    an Industrial PC, NVIDIA Jetson, or server-class gateway.  Scores
-    decay from 1.0 (<60s) to 0.0 (>=600s).
+    Returns a ``TimestampResult`` that supports both attribute access
+    (``.freshness_score``) and dict-style access (``["freshness_score"]``).
     """
 
     def __init__(self, freshness_limit_seconds: int = FRESHNESS_LIMIT_SECONDS):
