@@ -86,7 +86,13 @@ class CriticalityAgent:
     # this threshold, skip the LLM and return "Normal".
     _SKIP_LLM_CONFIDENCE: float = 0.85
 
-    def run(self, raw_readings: dict, tinyml_output: dict) -> CriticalityResult:
+    def run(
+        self,
+        raw_readings: dict,
+        tinyml_output: dict,
+        context: dict | None = None,
+    ) -> CriticalityResult:
+        context = context or {}
         # Clear safety-relevant cases are resolved locally. These rules are
         # also the primary classifier during explicit offline execution.
         rule_result = self._classify_with_rules(raw_readings)
