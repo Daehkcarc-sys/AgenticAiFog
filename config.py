@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Dict, List
 
@@ -10,6 +11,12 @@ DATA_PATH = DATA_DIR / "archive" / "Crop_recommendationV2.csv"
 DATA_ARCHIVE_PATH = DATA_DIR / "archive.zip"
 LOG_PATH = LOG_DIR / "decisions.json"
 METRICS_PATH = LOG_DIR / "metrics.json"
+QUEUE_DIR = LOG_DIR / "queues"
+STATE_DIR = ROOT_DIR / "state"
+CACHE_PATH = STATE_DIR / "decision_cache.json"
+RULE_STORE_PATH = STATE_DIR / "local_rules.json"
+MODEL_STORE_PATH = STATE_DIR / "model_store.json"
+AUDIT_CHAIN_PATH = LOG_DIR / "security_audit_chain.jsonl"
 
 # Trusted sensor identities for the fog domain
 SENSOR_REGISTRY: List[str] = [
@@ -106,3 +113,29 @@ FRESHNESS_LIMIT_SECONDS = 300
 FUTURE_TIMESTAMP_TOLERANCE_SECONDS = 5
 EARLY_EXIT_THRESHOLD = 0.5
 LOCAL_ACTION_MIN_SANITY_SCORE = 0.9
+
+# ── Integration endpoints (env-var driven, local-queue fallback) ──
+
+ACTUATOR_MODE = os.getenv("ACTUATOR_MODE", "local_queue")
+ACTUATOR_HTTP_ENDPOINT = os.getenv("ACTUATOR_HTTP_ENDPOINT")
+ACTUATOR_MQTT_HOST = os.getenv("ACTUATOR_MQTT_HOST")
+ACTUATOR_MQTT_PORT = int(os.getenv("ACTUATOR_MQTT_PORT", "1883"))
+ACTUATOR_MQTT_TOPIC = os.getenv("ACTUATOR_MQTT_TOPIC", "fog/actuators")
+ACTUATOR_COMMAND_TEMPLATE = os.getenv("ACTUATOR_COMMAND_TEMPLATE")
+
+CLOUD_SYNC_MODE = os.getenv("CLOUD_SYNC_MODE", "local_queue")
+CLOUD_HTTP_ENDPOINT = os.getenv("CLOUD_HTTP_ENDPOINT")
+CLOUD_KAFKA_BOOTSTRAP = os.getenv("CLOUD_KAFKA_BOOTSTRAP")
+CLOUD_KAFKA_TOPIC = os.getenv("CLOUD_KAFKA_TOPIC", "sensor-data")
+CLOUD_HEALTH_URL = os.getenv("CLOUD_HEALTH_URL")
+
+SECURITY_HMAC_SECRET = os.getenv("SECURITY_HMAC_SECRET", "dev-fog-secret")
+
+CRITICALITY_MODE = os.getenv("CRITICALITY_MODE", "local_first")
+CRITICALITY_ENABLE_REMOTE_FALLBACK = (
+    os.getenv("CRITICALITY_ENABLE_REMOTE_FALLBACK", "false").lower()
+    in {"1", "true", "yes", "on"}
+)
+CRITICALITY_AMBIGUITY_MARGIN = int(os.getenv("CRITICALITY_AMBIGUITY_MARGIN", "1"))
+
+OFFLINE_MODE = os.getenv("OFFLINE_MODE", "false").lower() in {"1", "true", "yes", "on"}

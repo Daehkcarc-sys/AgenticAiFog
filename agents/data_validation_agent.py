@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from config import ALLOWED_ACTIONS, REQUIRED_FIELDS
+from config import ALLOWED_ACTIONS, OPTIONAL_FIELDS, REQUIRED_FIELDS, VALID_RANGES
 from models import ValidationResult
 from sensor_registry import SensorRegistry
 
@@ -11,7 +11,8 @@ class DataValidationAgent:
     Performs a rapid reliability assessment (not a full Zero Trust
     implementation) suitable for Fog hardware such as an Industrial PC
     or NVIDIA Jetson.  Checks sensor identity against a static registry,
-    verifies required fields, and validates TinyML output format.
+    verifies required fields, validates TinyML output format, and rejects
+    unknown or non-numeric sensor fields.
 
     Uses ``ALLOWED_ACTIONS`` (the full action vocabulary including cloud
     and validation) for TinyML validation, not the physical ``ACTION_WHITELIST``
@@ -34,6 +35,28 @@ class DataValidationAgent:
             return ValidationResult(
                 passed=False,
                 reason=f"Missing required fields: {missing}",
+            )
+
+        unknown_fields = [
+            field
+            for field in raw_readings
+            if field not in REQUIRED_FIELDS and field not in OPTIONAL_FIELDS
+        ]
+        if unknown_fields:
+            return ValidationResult(
+                passed=False,
+                reason=f"Unknown raw reading fields: {unknown_fields}",
+            )
+
+        non_numeric = [
+            field
+            for field, value in raw_readings.items()
+            if field in VALID_RANGES and not isinstance(value, (int, float))
+        ]
+        if non_numeric:
+            return ValidationResult(
+                passed=False,
+                reason=f"Non-numeric sensor fields: {non_numeric}",
             )
 
         if not isinstance(tinyml_output, dict) or not tinyml_output:
