@@ -63,16 +63,18 @@ VALID_RANGES: Dict[str, tuple[float, float]] = {
     "nitrogen": (0, 500),
     "phosphorus": (0, 500),
     "potassium": (0, 500),
-}
-
-# Conservative operating envelope used only to identify clearly normal
-# readings. These limits are intentionally narrower than VALID_RANGES,
-# which describe physical plausibility rather than healthy crop conditions.
-NORMAL_OPERATING_RANGES: Dict[str, tuple[float, float]] = {
-    "soil_moisture": (40, 70),
-    "temperature": (15, 35),
-    "humidity": (30, 85),
-    "ph": (5.5, 8.0),
+    "pressure": (300, 1200),
+    "wind": (0, 80),
+    "salinity": (0, 20),
+    "tank_level": (0, 100),
+    "irrigation_flow": (0, 1000),
+    "valve_state": (0, 1),
+    "leaf_wetness": (0, 100),
+    "color_index": (0, 1),
+    "growth_rate": (-10, 20),
+    "packet_loss": (0, 100),
+    "missing_data": (0, 100),
+    "sensor_trust_score": (0, 1),
 }
 
 # Supported actions in the fog action loop
@@ -112,10 +114,9 @@ TRUST_LEVEL_THRESHOLDS = {
 FRESHNESS_LIMIT_SECONDS = 300
 FUTURE_TIMESTAMP_TOLERANCE_SECONDS = 5
 EARLY_EXIT_THRESHOLD = 0.5
-LOCAL_ACTION_MIN_SANITY_SCORE = 0.9
 
-# ── Integration endpoints (env-var driven, local-queue fallback) ──
-
+# Integration endpoints are optional. If unset, the project uses durable local
+# queues/files so it remains runnable on a development machine.
 ACTUATOR_MODE = os.getenv("ACTUATOR_MODE", "local_queue")
 ACTUATOR_HTTP_ENDPOINT = os.getenv("ACTUATOR_HTTP_ENDPOINT")
 ACTUATOR_MQTT_HOST = os.getenv("ACTUATOR_MQTT_HOST")
@@ -137,5 +138,3 @@ CRITICALITY_ENABLE_REMOTE_FALLBACK = (
     in {"1", "true", "yes", "on"}
 )
 CRITICALITY_AMBIGUITY_MARGIN = int(os.getenv("CRITICALITY_AMBIGUITY_MARGIN", "1"))
-
-OFFLINE_MODE = os.getenv("OFFLINE_MODE", "false").lower() in {"1", "true", "yes", "on"}

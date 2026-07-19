@@ -6,13 +6,10 @@ from sensor_registry import SensorRegistry
 
 
 class DataValidationAgent:
-    """Trust Layer — lightweight sensor identity and schema validation.
+    """Trust Layer — validates sensor identity, schema, and TinyML output.
 
-    Performs a rapid reliability assessment (not a full Zero Trust
-    implementation) suitable for Fog hardware such as an Industrial PC
-    or NVIDIA Jetson.  Checks sensor identity against a static registry,
-    verifies required fields, validates TinyML output format, and rejects
-    unknown or non-numeric sensor fields.
+    Returns a ``ValidationResult`` that supports both attribute access
+    (``.passed``) and dict-style access (``["passed"]``).
 
     Uses ``ALLOWED_ACTIONS`` (the full action vocabulary including cloud
     and validation) for TinyML validation, not the physical ``ACTION_WHITELIST``

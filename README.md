@@ -1,374 +1,341 @@
-# Agentic AI Fog — Trust-Oriented Agricultural Digital Twin
+# Agentic AI Fog - Trust-Oriented Agricultural Digital Twin
 
-> **Fog Node Implementation** · Python 3.14 · LangChain + Groq · Zero Trust
+Fog-node implementation for a Trust-Oriented Cloud-Fog-Edge Agricultural Digital
+Twin architecture. The project focuses on local, context-aware, trust-aware
+decision-making in the fog domain, with optional cloud, Kafka, actuator, ML, and
+edge integrations.
 
-A production-quality research prototype implementing the Fog layer of a
-**Trust-Oriented Cloud–Fog–Edge Agricultural Digital Twin Architecture**.
-Combines deterministic rule engines with LLM-powered reasoning to validate
-sensor telemetry, classify agricultural scenarios, and enforce trust-aware
-actuation policies — all within the resource constraints of a Fog node.
+Current code owners:
+
+- Zaaa / Aziza and Lion: agentic fog pipeline, trust, context, decisions, enforcement.
+- Sonic and Sarra: ML scenario modeling and dataset/model evaluation.
+- Limon: Kafka/cloud synchronization.
+- 3otri: edge layer, TinyML, hardware telemetry, and actuator integration.
+- Digital twin owner: TBD.
 
 ---
 
 ## Table of Contents
 
-1. [Architecture Overview](#architecture-overview)
-2. [The Four-Layer Fog Architecture](#the-four-layer-fog-architecture)
-3. [Execution Pipeline](#execution-pipeline)
-4. [Decision Flow (LLM Avoidance Strategy)](#decision-flow-llm-avoidance-strategy)
-5. [Trust Model](#trust-model)
-6. [Agricultural Scenarios](#agricultural-scenarios)
-7. [Security Features](#security-features)
-8. [Benchmarking & Metrics](#benchmarking--metrics)
-9. [Project Structure](#project-structure)
-10. [Quick Start](#quick-start)
-11. [Example Output](#example-output)
-12. [Architecture Mapping](#architecture-mapping)
-13. [Research & Publication](#research--publication)
-14. [Authors](#authors)
+1. [Current Status](#current-status)
+2. [Architecture Overview](#architecture-overview)
+3. [Pipeline Layers](#pipeline-layers)
+4. [Team Handover](#team-handover)
+5. [Project Structure](#project-structure)
+6. [Quick Start](#quick-start)
+7. [Configuration](#configuration)
+8. [Tests](#tests)
+9. [Architecture Mapping](#architecture-mapping)
+10. [Authors](#authors)
+
+---
+
+## Current Status
+
+This repository implements the fog-domain agentic pipeline. It is not just the
+old diagram anymore; several pieces that were previously simulated now have
+configurable adapters or local persistent stores.
+
+Implemented:
+
+- Trust layer: schema validation, timestamp freshness, trust scoring, value sanity.
+- Context layer: rolling history, averages, slopes, variance, feature extraction,
+  semantic context, and multi-level anomaly detection.
+- Decision layer: local-first criticality classifier, decision cache, and final
+  decision agent with rule/cache/LLM/cloud hierarchy.
+- Enforcement layer: policy enforcement point, validation agent, actuator adapters,
+  and cloud escalation.
+- Support services: resource monitor, connectivity probe, persistent rule store,
+  HMAC authorization, tamper-evident audit chain, persistent decision cache,
+  model update metadata store, cloud sync queue/publisher.
+- Tests: unit and smoke tests under `tests/`.
+
+Still external/team-owned:
+
+- Real ML scenario model training and evaluation: Sonic and Sarra.
+- Real Kafka deployment and topics: Limon.
+- Real hardware telemetry, TinyML firmware, and actuator wiring: 3otri.
+- Digital twin service/API/schema: TBD owner.
 
 ---
 
 ## Architecture Overview
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    CLOUD LAYER                                   │
-│  Long-term storage · Global orchestration · Digital Twins       │
-│  Policy Administration Point (PAP) · Global analytics           │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │ Kafka (simulated)
-┌──────────────────────────┴──────────────────────────────────────┐
-│                    FOG LAYER  ← this project                    │
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                   TRUST LAYER                            │   │
-│  │  Agent 1: Data Validation  ·  Agent 2: Timestamp        │   │
-│  │  Agent 3: Trust Score      ·  Agent 4: Value Sanity     │   │
-│  └──────────────────────────┬──────────────────────────────┘   │
-│                             ↓                                   │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                 CONTEXT LAYER  (external)                │   │
-│  │  Historical trends · Rolling averages · Derived features │   │
-│  └──────────────────────────┬──────────────────────────────┘   │
-│                             ↓                                   │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │               INTELLIGENCE LAYER                         │   │
-│  │  Agent 5: Criticality  ·  DecisionCache                 │   │
-│  │  Agent 6: Decision     ·  (rules → cache → LLM → cloud) │   │
-│  └──────────────────────────┬──────────────────────────────┘   │
-│                             ↓                                   │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │               ENFORCEMENT LAYER                          │   │
-│  │  ActionHandler (PEP)  ·  ValidationAgent                │   │
-│  │  CloudInterface                                          │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  Cross-cutting: FogLogger · PipelineMetrics · DecisionCache    │
-└──────────────────────────┬──────────────────────────────────────┘
-                           │ LoRa / LoRaWAN (simulated)
-┌──────────────────────────┴──────────────────────────────────────┐
-│                    EDGE LAYER                                    │
-│  Soil sensors · Water actuators · Smart machinery              │
-│  Field gateways · Lightweight Digital Twins · TinyML           │
-└─────────────────────────────────────────────────────────────────┘
+The repo implements the fog node in this flow:
+
+```text
+Edge / Field Devices
+  soil sensors, water actuators, smart machinery, field gateways, TinyML
+        |
+        v
+Fog Node - this repository
+  Trust Layer
+    data validation -> timestamp alignment -> trust score -> value sanity
+  Context Layer
+    rolling history -> feature extraction -> anomaly detection -> semantic context
+  Decision Layer
+    local criticality -> rule decision -> cache -> optional LLM -> optional cloud
+  Enforcement Layer
+    PEP -> actuator adapter -> logging/audit -> cloud sync
+        |
+        v
+Cloud / Governance
+  Kafka/cloud ingestion, long-term storage, policies, global analytics,
+  digital twins, model updates
 ```
 
-The Fog node is the system's **autonomous decision-making core**. It processes
-sensor telemetry locally, applies Zero Trust validation, and only escalates to
-the Cloud when trust is low or decisions are ambiguous. This minimizes latency,
-reduces bandwidth, and keeps the farm operational during connectivity loss.
+Default behavior is safe for local development:
+
+- Actuator commands are written to `logs/queues/actuator_commands.jsonl`.
+- Cloud events are written to `logs/queues/cloud_events.jsonl`.
+- Decision cache and local rules are persisted under `state/`.
+- Real MQTT, HTTP, Kafka, and command integrations are enabled through environment
+  variables.
 
 ---
 
-## The Four-Layer Fog Architecture
+## Pipeline Layers
 
-### 1. Trust Layer (Agents 1–4)
-
-Deterministic, sub-millisecond rule engines that form the **first line of defense**.
-
-| Agent | File | Responsibility | Rejects? |
-|-------|------|---------------|----------|
-| **DataValidationAgent** | `agents/data_validation_agent.py` | Sensor identity, schema, TinyML format | Yes |
-| **TimestampAgent** | `agents/timestamp_agent.py` | Freshness scoring, replay attack detection | Yes (≥600s) |
-| **TrustScoreAgent** | `agents/trust_score_agent.py` | Composite trust: identity 35% + freshness 25% + consistency 40% | Yes (<0.5) |
-| **ValueSanityAgent** | `agents/value_sanity_agent.py` | Physical range + extreme outlier + semantic consistency | Yes (impossible values) |
-
-**Early exit**: Any Trust Layer agent can short-circuit the pipeline, preventing
-costly LLM calls for untrusted data. Unknown sensors, stale timestamps, and
-physically impossible readings never reach the Intelligence Layer.
-
-### 2. Context Layer (External Dependency)
-
-*Implemented by Aziza. Not part of this repository.*
-
-Will provide: historical trends, rolling averages, derived agricultural features,
-anomaly indicators, and semantic context. The Intelligence Layer is designed to
-consume Context objects when available.
-
-### 3. Intelligence Layer (Agents 5–6 + Cache)
-
-LLM-powered reasoning components with deterministic pre-gates to minimize API usage.
+### 1. Trust Layer
 
 | Component | File | Responsibility |
-|-----------|------|---------------|
-| **CriticalityAgent** | `agents/criticality_agent.py` | Classify agricultural scenario (8 classes), determine severity |
-| **DecisionCache** | `decision_cache.py` | Bounded in-memory cache avoiding redundant LLM calls |
-| **DecisionAgent** | `agents/decision_agent.py` | Hierarchical decision: rules → cache → LLM → cloud |
+|---|---|---|
+| Data validation | `agents/data_validation_agent.py` | Sensor identity, required fields, optional IoT fields, TinyML output format |
+| Timestamp alignment | `agents/timestamp_agent.py` | Freshness scoring and replay/stale reading rejection |
+| Trust scoring | `agents/trust_score_agent.py` | Composite trust from identity, freshness, and TinyML consistency |
+| Value sanity | `agents/value_sanity_agent.py` | Physical ranges, extreme outliers, semantic consistency |
+
+Required sensor fields are in `REQUIRED_FIELDS`. Optional IoT fields such as
+`pressure`, `wind`, `salinity`, `tank_level`, `irrigation_flow`, `valve_state`,
+`leaf_wetness`, `packet_loss`, and `sensor_trust_score` are in `OPTIONAL_FIELDS`.
+
+### 2. Context Layer
+
+Implemented mainly in:
+
+- `agents/context_manager_agent.py`
+- `anomaly_detector.py`
+
+Responsibilities:
+
+- Maintain bounded per-sensor sliding history.
+- Compute rolling averages, trends/slopes, and variance.
+- Extract derived agricultural features such as VPD, heat-humidity index, soil
+  moisture band, and nutrient balance.
+- Detect physical, statistical, and domain anomalies.
+- Build a compact semantic summary for downstream decision-making.
+
+### 3. Decision Layer
+
+| Component | File | Responsibility |
+|---|---|---|
+| Criticality | `agents/criticality_agent.py` | Local-first classifier for 8 scenarios, optional remote fallback only on ambiguity |
+| Decision cache | `decision_cache.py` | Persistent cache for repeated decision contexts |
+| Decision agent | `agents/decision_agent.py` | Final decision via deterministic rules, cache, LLM, or cloud escalation |
+
+`CriticalityAgent` is no longer always remote. It uses local deterministic
+scenario scoring by default. Groq fallback is optional and controlled by:
+
+- `CRITICALITY_MODE`
+- `CRITICALITY_ENABLE_REMOTE_FALLBACK`
+- `CRITICALITY_AMBIGUITY_MARGIN`
+
+The ML team can later replace or augment this local classifier with a trained
+model, but the current interface should remain:
+
+```python
+run(raw_readings: dict, tinyml_output: dict, context: dict | None = None) -> CriticalityResult
+```
 
 ### 4. Enforcement Layer
 
 | Component | File | Responsibility |
-|-----------|------|---------------|
-| **ActionHandler (PEP)** | `action_handler.py` | Policy Enforcement Point: whitelist-gated actuation, trust routing |
-| **ValidationAgent** | `validation_agent.py` | Second-opinion LLM validator for MEDIUM trust decisions |
-| **CloudInterface** | `cloud_interface.py` | Simulated Kafka + cloud escalation + rejection notification |
+|---|---|---|
+| PEP/action routing | `action_handler.py` | Trust-based action routing and whitelist enforcement |
+| Actuator adapters | `actuator_adapters.py` | Local queue, HTTP, MQTT, or shell-command actuator dispatch |
+| Validation agent | `validation_agent.py` | Second-opinion LLM validator for medium-trust decisions |
+| Cloud interface | `cloud_interface.py` | Cloud escalation, rejection events, summary publishing, model update hooks |
+| Cloud sync adapters | `cloud_sync.py` | Local queue, HTTP, Kafka publishers, model update install/rollback metadata |
+
+### 5. Cross-Cutting Support Services
+
+Implemented in `support_services.py`:
+
+- `ResourceMonitor`: CPU/disk plus optional memory/battery through `psutil`.
+- `ConnectivityManager`: probes `CLOUD_HEALTH_URL` or Kafka bootstrap if configured.
+- `LocalRuleStore`: persistent local rule/policy JSON with versioning.
+- `SecurityAccessControl`: HMAC signatures, key rotation, authorization checks,
+  tamper-evident audit chain.
+- `CloudSyncStore`: durable queue for fog summaries.
 
 ---
 
-## Execution Pipeline
+## Team Handover
 
-```
-Sensor Telemetry (CSV / simulated)
-│
-▼
-┌─ Trust Layer ──────────────────────────────────────────┐
-│                                                        │
-│  Agent 1: Data Validation                              │
-│  ├─ Check sensor identity in SensorRegistry            │
-│  ├─ Verify all REQUIRED_FIELDS present                 │
-│  ├─ Validate TinyML output format                      │
-│  ├─ Check recommended_action in ALLOWED_ACTIONS        │
-│  └─ Verify confidence ∈ [0, 1]                         │
-│  → FAIL: REJECT (unknown sensor / malformed data)      │
-│                                                        │
-│  Agent 2: Timestamp                                    │
-│  ├─ Parse ISO 8601 timestamp                           │
-│  ├─ age < 60s  → freshness 1.0                        │
-│  ├─ age < 180s → freshness 0.8                        │
-│  ├─ age < 300s → freshness 0.6                        │
-│  ├─ age < 600s → freshness 0.3                        │
-│  └─ age ≥ 600s → REJECT (possible replay attack)      │
-│                                                        │
-│  Agent 3: Trust Score                                  │
-│  ├─ identity_score = 1.0 (verified by Agent 1)         │
-│  ├─ consistency = cross-check TinyML vs soil moisture  │
-│  └─ composite = 0.35·id + 0.25·fresh + 0.40·consist   │
-│  → FAIL if < 0.5: REJECT                              │
-│                                                        │
-│  Agent 4: Value Sanity                                 │
-│  ├─ Physical range check per field (VALID_RANGES)      │
-│  ├─ Extreme outlier detection (2× range multiplier)    │
-│  ├─ Semantic consistency with TinyML recommendation    │
-│  └─ Hard-reject on physically impossible values        │
-│  → FAIL if temp=999, humidity=999, etc.                │
-└────────────────────────────────────────────────────────┘
-│
-▼  (Context Layer — external — not yet integrated)
-│
-┌─ Intelligence Layer ───────────────────────────────────┐
-│                                                        │
-│  Agent 5: Criticality                                  │
-│  ├─ Deterministic pre-gate: skip LLM if clearly normal │
-│  ├─ LLM classifies into 8 agricultural scenarios       │
-│  └─ Falls back to "Normal" on API failure              │
-│                                                        │
-│  Agent 6: Decision (3-tier hierarchy)                  │
-│  ├─ Tier 1: Deterministic rules (~0.01ms)              │
-│  │   · HIGH + simple action → act_locally              │
-│  │   · LOW → reject                                    │
-│  ├─ Tier 2: DecisionCache lookup (~0.01ms)             │
-│  │   · SHA-256 context hashing, 0.05 trust buckets     │
-│  │   · FIFO eviction, TTL expiration                   │
-│  ├─ Tier 3: LLM reasoning (~170ms)                     │
-│  │   · Only invoked when rules + cache miss            │
-│  └─ Falls back to "escalate → cloud" on API failure    │
-└────────────────────────────────────────────────────────┘
-│
-▼
-┌─ Enforcement Layer ────────────────────────────────────┐
-│                                                        │
-│  ActionHandler (PEP)                                   │
-│  ├─ HIGH   → execute(action)  [whitelist-gated]        │
-│  ├─ MEDIUM → ValidationAgent → confirm | escalate      │
-│  └─ LOW    → reject_and_alert → CloudInterface         │
-│                                                        │
-│  Audit: FogLogger → logs/decisions.json                │
-│  Metrics: PipelineMetrics → logs/metrics.json          │
-└────────────────────────────────────────────────────────┘
-```
+Use this section first if you are joining the project and do not want to read
+the whole repo.
 
----
+### Zaaa / Aziza and Lion - Agentic Fog Pipeline
 
-## Decision Flow (LLM Avoidance Strategy)
+Start here:
 
-The system is designed to **minimize LLM calls** — the most expensive operation
-on resource-constrained Fog hardware. Each decision passes through increasingly
-expensive resolution tiers:
+- `pipeline.py`: full orchestration order.
+- `agents/context_manager_agent.py`: context layer.
+- `anomaly_detector.py`: multi-level anomaly detection.
+- `agents/criticality_agent.py`: local-first scenario classifier.
+- `agents/decision_agent.py`: final action decision.
+- `action_handler.py`: PEP and trust-based routing.
+- `tests/test_fog_components.py`: current regression tests.
 
-```
-Incoming Context
-│
-├─► Tier 1: Deterministic Rules  (~0.01ms, no I/O)
-│   HIGH trust + simple action? → decide immediately
-│   LOW trust?                  → reject immediately
-│   MEDIUM or complex?          → fall through
-│
-├─► Tier 2: Decision Cache      (~0.01ms, in-memory)
-│   Similar context seen recently? → reuse decision
-│   Cache miss?                    → fall through
-│
-├─► Tier 3: LLM Reasoning       (~170ms, HTTPS → Groq)
-│   Invoke Llama 3.1 8B with full pipeline context
-│   Store result in cache for future reuse
-│
-└─► Tier 4: Cloud Escalation    (fallback only)
-    LLM unavailable after retries? → escalate to cloud
+Main integration contract:
+
+- Pipeline input is a sensor message dict with `sensor_id`, `timestamp`,
+  `raw_readings`, and `tinyml_output`.
+- Pipeline output is a result string such as `irrigate_queued`, `rejected: ...`,
+  or `cloud_decided: ...`.
+- Do not change `CriticalityAgent.run(...)` or `DecisionAgent.run(...)` signatures
+  unless all downstream callers and tests are updated.
+
+### Sonic and Sarra - ML Scenarios
+
+Start here:
+
+- `models.py`: `CriticalityScenario` enum. These are the 8 canonical labels.
+- `agents/criticality_agent.py`: current local classifier and scoring rules.
+- `anomaly_detector.py`: anomaly/domain findings available before classification.
+- `data/` or `data/archive.zip`: dataset area.
+- `tests/test_fog_components.py`: expected behavior for scenarios.
+
+What you likely need to deliver:
+
+- A labeled scenario dataset for the 8 `CriticalityScenario` classes.
+- Evaluation metrics: accuracy, precision/recall, confusion matrix, false
+  positives/false negatives.
+- Optional embedded model artifact, for example `.tflite`, `.onnx`, or similar.
+- A wrapper that preserves the existing return shape: `CriticalityResult`.
+
+Recommended integration path:
+
+- Keep the deterministic classifier as fallback.
+- Add model inference behind the same `CriticalityAgent.run(...)` interface.
+- Compare rule-only vs ML vs hybrid in tests/metrics.
+
+### Limon - Kafka / Cloud Synchronization
+
+Start here:
+
+- `cloud_sync.py`: publisher adapters.
+- `cloud_interface.py`: escalation, rejection, summary upload, model update hooks.
+- `support_services.py`: `ConnectivityManager` and `CloudSyncStore`.
+- `config.py`: `CLOUD_*` environment variables.
+
+What you likely need to deliver:
+
+- Real Kafka topic names and schemas for:
+  - `sensor-data`
+  - `trust-events`
+  - `fog-decisions`
+  - `critical-events` if needed
+- Kafka producer/consumer deployment config.
+- Retry/backoff and dead-letter strategy.
+- Mapping between local queue events and Kafka messages.
+
+Current default:
+
+- If Kafka is not configured, cloud events are persisted locally in
+  `logs/queues/cloud_events.jsonl`.
+
+### 3otri - Edge, TinyML, Hardware
+
+Start here:
+
+- `agents/data_validation_agent.py`: accepted raw telemetry fields.
+- `config.py`: `REQUIRED_FIELDS`, `OPTIONAL_FIELDS`, `VALID_RANGES`,
+  `ALLOWED_ACTIONS`, `ACTION_WHITELIST`.
+- `actuator_adapters.py`: actuator dispatch options.
+- `action_handler.py`: how final decisions become actuator commands.
+
+What you likely need to deliver:
+
+- Real sensor message format from field gateways.
+- TinyML output format:
+
+```json
+{
+  "recommended_action": "irrigate",
+  "confidence": 0.9,
+  "anomaly_detected": false
+}
 ```
 
-**Expected LLM savings**: In a typical 50-reading run with mixed scenarios,
-~85% of decisions resolve at Tier 1 (rules) or Tier 2 (cache), avoiding the
-LLM entirely.
+- Optional HMAC signature generation for sensor messages.
+- Real actuator backend using MQTT, HTTP, or local command mode.
 
----
+Current default:
 
-## Trust Model
+- Actuator commands are queued to `logs/queues/actuator_commands.jsonl`.
 
-### Trust Levels
+### Digital Twin Owner - TBD
 
-| Score | Level | Action |
-|-------|-------|--------|
-| 0.8 – 1.0 | **HIGH** | Execute locally via whitelist |
-| 0.5 – 0.8 | **MEDIUM** | Consult ValidationAgent → confirm or escalate |
-| 0.0 – 0.5 | **LOW** | Reject + notify Cloud |
+Start here:
 
-### Trust Score Composition
+- `agents/context_manager_agent.py`: local state and aggregated context.
+- `cloud_interface.py`: summary upload and model update hooks.
+- `cloud_sync.py`: cloud publisher.
+- `logger.py`: decision audit trail.
 
-| Factor | Weight | Description |
-|--------|--------|-------------|
-| Identity | 35% | Sensor in trusted registry? (binary: 0.0 or 1.0) |
-| Freshness | 25% | Reading age — decays from 1.0 (<60s) to 0.0 (≥600s) |
-| Consistency | 40% | TinyML recommendation matches raw sensor data? |
+What you likely need to define:
 
-**Early exit at 0.5** — readings below this threshold skip all downstream agents.
+- Digital twin entity schema: field, sensor, crop, actuator, scenario, decision.
+- API or Kafka contract for local state/aggregated data.
+- How cloud twin state pushes policies/model updates back to fog.
+- Which data is long-term storage vs short-term fog context.
 
----
+Recommended first contract:
 
-## Agricultural Scenarios
-
-The CriticalityAgent classifies each reading into one of 8 canonical scenarios
-defined in the `CriticalityScenario` enum (`models.py`):
-
-| # | Scenario | Criteria |
-|---|----------|----------|
-| 1 | **Normal** | All readings within expected ranges |
-| 2 | **Water deficit** | Low soil moisture, insufficient rainfall |
-| 3 | **Flooding** | Very high soil moisture + significant rainfall |
-| 4 | **Fire or heat stress** | Temperature exceeds crop-safe thresholds |
-| 5 | **Crop disease risk** | High humidity + temperature → fungal conditions |
-| 6 | **Pest infestation risk** | Warm + humid conditions persist |
-| 7 | **Soil degradation** | pH or nutrients far from optimal |
-| 8 | **Equipment failure** | Physically impossible sensor values |
-
-The LLM prompt is **dynamically generated** from the enum, guaranteeing that
-scenario labels can never drift from the data model.
-
----
-
-## Security Features
-
-| Feature | Implementation |
-|---------|---------------|
-| **Zero Trust** | Every reading fully verified before any processing |
-| **Cryptographic identity** | `SensorRegistry` with case-insensitive lookup |
-| **Replay attack detection** | Timestamp freshness with 300s hard limit, 600s absolute cutoff |
-| **Continuous authorization** | Trust score recomputed on every reading |
-| **Action whitelist (PEP)** | `ACTION_WHITELIST` blocks unauthorized LLM actions |
-| **Prompt injection protection** | JSON-only response format, structured parsing with fallbacks |
-| **Audit logging** | `FogLogger` — JSON audit trail with in-memory caching |
-| **LLM resilience** | `safe_invoke` with 3 attempts, exponential backoff, graceful fallback |
-| **Graceful degradation** | Every LLM agent has a safe fallback on persistent API failure |
-| **Early exit** | 4 independent early-exit gates (Agents 1, 2, 3, 4) |
-
----
-
-## Benchmarking & Metrics
-
-`PipelineMetrics` (`metrics.py`) collects zero-overhead per-agent latency,
-trust score distributions, scenario histograms, decision source breakdowns,
-and result distributions.
-
-```python
-metrics = PipelineMetrics()
-pipeline = FogPipeline(metrics=metrics, cache=DecisionCache(max_size=64))
-
-# ... run pipeline ...
-
-print(metrics.report())       # formatted console summary
-metrics.to_dict()             # JSON-serializable for pandas/matplotlib
-```
-
-### Metrics Collected
-
-| Category | Metrics |
-|----------|---------|
-| **Per-agent latency** | avg, median, p99, min, max (ms) |
-| **Trust scores** | mean, median, stdev, min, max |
-| **Scenarios** | count + percentage per scenario |
-| **Decisions** | act_locally / validate / escalate counts |
-| **Decision sources** | rule / cache / llm / cloud breakdown |
-| **Actions** | irrigate / stop_irrigation / etc. distribution |
-| **Results** | executed / rejected / cloud_decided distribution |
-
-### Decision Cache Statistics
-
-```python
-cache_stats = pipeline.cache_stats
-# {'size': 2, 'max_size': 64, 'hits': 6, 'misses': 2,
-#  'evictions': 0, 'hit_rate': 0.75, 'ttl_seconds': 300}
-```
+- Consume compact fog summaries from cloud sync.
+- Return policy/model update metadata that can be passed to
+  `CloudInterface.receive_model_update(...)` or `LocalRuleStore.update(...)`.
 
 ---
 
 ## Project Structure
 
-```
+```text
 AgenticAiFog/
-│
-├── agents/                          # Fog agent implementations
-│   ├── __init__.py                  # Package exports
-│   ├── data_validation_agent.py     # Trust Layer — identity + schema validation
-│   ├── timestamp_agent.py           # Trust Layer — freshness + replay detection
-│   ├── trust_score_agent.py         # Trust Layer — composite trust scoring
-│   ├── value_sanity_agent.py        # Trust Layer — physical + semantic sanity
-│   ├── criticality_agent.py         # Intelligence Layer — LLM scenario classifier
-│   └── decision_agent.py            # Intelligence Layer — hierarchical decision maker
-│
-├── pipeline.py                      # 4-layer orchestrator (FogPipeline)
-├── action_handler.py                # Enforcement Layer — PEP with DI
-├── validation_agent.py              # Enforcement Layer — second-opinion validator
-├── cloud_interface.py               # Enforcement Layer — cloud escalation (Kafka sim)
-│
-├── models.py                        # Enums + FogAgentResult dataclasses
-├── contracts.py                     # TypedDicts for dict-based interfaces
-├── config.py                        # All constants, thresholds, registries
-├── llm_factory.py                   # Centralized LLM config + safe_invoke helper
-├── decision_cache.py                # Bounded in-memory decision cache
-├── metrics.py                       # PipelineMetrics — benchmarking infrastructure
-├── logger.py                        # FogLogger — cached JSON audit trail
-├── sensor_registry.py               # Cryptographic identity validation
-├── utils.py                         # JSON parsing utilities
-├── main.py                          # Entry point — demo driver + metrics export
-│
-├── trust_scorer.py                  # [DEPRECATED] Legacy monolithic trust scorer
-├── fog_agent.py                     # [DEPRECATED] Legacy monolithic agent
-│
-├── data/archive/                    # Dataset directory
-│   └── Crop_recommendationV2.csv    # Smart Farming Dataset 2024 (Kaggle)
-│
-└── logs/                            # Runtime output (gitignored)
-    ├── decisions.json               # Auto-generated audit trail
-    └── metrics.json                 # Auto-generated benchmark data
+  agents/
+    data_validation_agent.py      Trust Layer - identity/schema/TinyML validation
+    timestamp_agent.py            Trust Layer - freshness/replay checks
+    trust_score_agent.py          Trust Layer - composite trust scoring
+    value_sanity_agent.py         Trust Layer - physical/semantic sanity
+    context_manager_agent.py      Context Layer - history/features/semantic context
+    criticality_agent.py          Decision Layer - local-first scenario classifier
+    decision_agent.py             Decision Layer - rule/cache/LLM/cloud decision
+
+  pipeline.py                     Main FogPipeline orchestration
+  anomaly_detector.py             Multi-level anomaly detection
+  action_handler.py               Policy Enforcement Point
+  actuator_adapters.py            Local queue/HTTP/MQTT/command actuator adapters
+  cloud_interface.py              Cloud escalation and update interface
+  cloud_sync.py                   Local queue/HTTP/Kafka publishers + model store
+  support_services.py             Resource/connectivity/rules/security/cloud queue
+  decision_cache.py               Persistent decision cache
+  models.py                       Enums and dataclass result models
+  contracts.py                    TypedDict contracts for context/cloud/validation
+  config.py                       Constants and environment-backed configuration
+  metrics.py                      Pipeline metrics
+  logger.py                       JSON decision logs
+  llm_factory.py                  Optional Groq/LangChain helper
+  main.py                         Demo driver
+
+  tests/test_fog_components.py    Regression tests
+
+  logs/                           Runtime logs and local queues
+  state/                          Persistent cache, rules, model metadata
+  data/                           Dataset area
+
+  fog_agent.py                    Deprecated legacy monolithic agent
+  trust_scorer.py                 Deprecated legacy trust scorer
 ```
 
 ---
@@ -378,16 +345,15 @@ AgenticAiFog/
 ### Prerequisites
 
 - Python 3.10+
-- [Groq API key](https://console.groq.com) (free tier works)
+- `pandas` for the demo dataset loader.
+- Optional: Groq/LangChain only if you enable LLM paths.
+- Optional: `paho-mqtt` for MQTT actuator mode.
+- Optional: `kafka-python` for Kafka cloud sync mode.
+- Optional: `psutil` for richer resource monitoring.
 
 ### Setup
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/Daehkcarc-sys/AgenticAiFog.git
-cd AgenticAiFog
-
-# 2. Create and activate a virtual environment
 python -m venv venv
 
 # Windows
@@ -396,128 +362,115 @@ venv\Scripts\activate
 # macOS / Linux
 source venv/bin/activate
 
-# 3. Install dependencies
-pip install langchain langchain-groq langchain-core python-dotenv pandas
+pip install pandas python-dotenv langchain langchain-groq langchain-core
 
-# 4. Configure your Groq API key
-echo "GROQ_API_KEY=gsk_your_key_here" > .env
+# Optional integrations
+pip install paho-mqtt kafka-python psutil
 
-# 5. Run the demo (50 readings + full metrics report)
+python -m unittest discover -s tests
 python main.py
 ```
 
-### Environment Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `GROQ_API_KEY` | Yes | — | Groq API key for LLM inference |
-| `GROQ_MODEL` | No | `llama-3.1-8b-instant` | Model name override for A/B testing |
+Groq is optional for the local-first criticality path, but still used by
+`DecisionAgent` and `ValidationAgent` if execution reaches their LLM branches.
 
 ---
 
-## Example Output
+## Configuration
 
+### Core LLM
+
+| Variable | Default | Description |
+|---|---:|---|
+| `GROQ_API_KEY` | unset | Required only for Groq-backed LLM branches |
+| `GROQ_MODEL` | `llama-3.1-8b-instant` | Groq model name |
+
+### Criticality
+
+| Variable | Default | Description |
+|---|---:|---|
+| `CRITICALITY_MODE` | `local_first` | `local_first` or `local_only` |
+| `CRITICALITY_ENABLE_REMOTE_FALLBACK` | `false` | Enables Groq fallback for ambiguous criticality only |
+| `CRITICALITY_AMBIGUITY_MARGIN` | `1` | Score margin used to define ambiguity |
+
+### Actuation
+
+| Variable | Default | Description |
+|---|---:|---|
+| `ACTUATOR_MODE` | `local_queue` | `local_queue`, `http`, `mqtt`, or `command` |
+| `ACTUATOR_HTTP_ENDPOINT` | unset | HTTP actuator endpoint |
+| `ACTUATOR_MQTT_HOST` | unset | MQTT broker host |
+| `ACTUATOR_MQTT_PORT` | `1883` | MQTT broker port |
+| `ACTUATOR_MQTT_TOPIC` | `fog/actuators` | MQTT topic |
+| `ACTUATOR_COMMAND_TEMPLATE` | unset | Command template, e.g. `irrigatectl {action}` |
+
+### Cloud / Kafka
+
+| Variable | Default | Description |
+|---|---:|---|
+| `CLOUD_SYNC_MODE` | `local_queue` | `local_queue`, `http`, or `kafka` |
+| `CLOUD_HTTP_ENDPOINT` | unset | HTTP cloud ingestion endpoint |
+| `CLOUD_KAFKA_BOOTSTRAP` | unset | Kafka bootstrap server list |
+| `CLOUD_KAFKA_TOPIC` | `sensor-data` | Default summary topic |
+| `CLOUD_HEALTH_URL` | unset | Connectivity probe URL |
+
+### Security
+
+| Variable | Default | Description |
+|---|---:|---|
+| `SECURITY_HMAC_SECRET` | `dev-fog-secret` | Shared secret for optional signed sensor messages |
+
+---
+
+## Tests
+
+Run:
+
+```bash
+python -m unittest discover -s tests
+python -m compileall .
 ```
-[Agent 1 - Validation] PASS Data validation passed
-[Agent 2 - Timestamp]  PASS Timestamp valid
-[Agent 3 - Trust]      PASS Score: 1.0 | Level: TrustLevel.HIGH
-[Agent 4 - Sanity]     PASS 8/8 fields passed sanity check
-[Agent 5 - Criticality] OK Scenario: Normal | Severity: low
-[Agent 6 - Decision]   -> act_locally | Action: irrigate | source: rule
-[ACTION] Executing: irrigate
 
-[Agent 1 - Validation] PASS Data validation passed
-[Agent 2 - Timestamp]  PASS Timestamp valid
-[Agent 3 - Trust]      PASS Score: 0.509 | Level: TrustLevel.MEDIUM
-[Agent 4 - Sanity]     FAIL Physically impossible values in: ['temperature'].
-                       Anomalies: temperature: EXTREME outlier (999, range [-20, 60])
-[REJECT] Physically impossible values in: ['temperature']
+Current tests cover:
 
-==================================================
-        FOG PIPELINE METRICS REPORT
-==================================================
-  Total readings      : 50
---------------------------------------------------
-  Trust Score Distribution:
-    Mean   : 0.9386    Median : 1.0000    Stdev  : 0.1736
---------------------------------------------------
-  Agent Latencies (ms):
-    criticality           avg=  284.27  median=  173.83  p99= 1056.24
-    data_validation       avg=    0.01  median=    0.01  p99=    0.01
-    decision              avg=   22.67  median=    0.01  p99=  181.30
-    timestamp             avg=    0.01  median=    0.01  p99=    0.02
-    trust_score           avg=    0.01  median=    0.01  p99=    0.01
-    value_sanity          avg=    0.01  median=    0.01  p99=    0.02
---------------------------------------------------
-  Scenario Distribution:
-    Normal                        35  ( 70.0%)
-    Water deficit                 15  ( 30.0%)
---------------------------------------------------
-  Decision Distribution:
-    act_locally                   42  ( 84.0%)
-    validate                       8  ( 16.0%)
---------------------------------------------------
-  Decision Source:
-    rule                          34  ( 68.0%)
-    cache                          8  ( 16.0%)
-    llm                            8  ( 16.0%)
-==================================================
-
-Decision Cache: 8 hits / 2 misses (80.0% hit rate, 2/64 entries)
-```
+- Optional IoT field validation.
+- Context history and optional field tracking.
+- Multi-level anomaly detection.
+- Criticality scenarios: Normal, Water deficit, Flooding, Heat stress, Disease
+  risk, Soil degradation, Equipment failure, and ambiguous local result.
+- Pipeline smoke test with local-first criticality.
+- HMAC signature and tamper-evident audit chain.
+- Persistent local rule store.
+- Cloud sync queue drain.
+- Persistent decision cache.
+- Actuator queue dispatch.
+- Cloud publisher and model update store.
 
 ---
 
 ## Architecture Mapping
 
-How each Fog component maps to the Trust-Oriented Cloud–Fog–Edge reference
-architecture (Figure 1):
-
-| Architecture Block | Implementation |
-|--------------------|---------------|
-| Cryptographic Identity & Attestation | `sensor_registry.py` + Agent 1 |
-| Score-Based Continuous Authorization | Agent 3 + `TrustLevel` enum routing |
-| Runtime Observability & Audit Logs | `logger.py` + `metrics.py` |
-| Autonomous Recovery Manager | `safe_invoke` retry + fallback system |
-| Multi-Agent Coordination | `pipeline.py` 4-layer orchestration |
-| Policy Enforcement Point (PEP) | `action_handler.py` + `ACTION_WHITELIST` |
-| Agentic Decision Loop | `DecisionAgent` 3-tier hierarchy |
-| Local Anomaly Detection | Agents 4 + 5 combined |
-| Local Fusion & Feature Extraction | `ValueSanityAgent` + trust composition |
-| Fog Microservices | Each agent is an independent service |
-| Cloud Domain (PAP) | `cloud_interface.py` |
-| Digital Twins | *(Context Layer — external dependency)* |
-
----
-
-## Research & Publication
-
-### Current Readiness
-
-The implementation is suitable for an **internship report, workshop paper, or
-conference demo track**.  It provides:
-
-- Reproducible benchmarking infrastructure
-- Per-agent latency measurements (avg, median, p99)
-- Trust score distributions with statistical summaries
-- Decision source tracking (rule vs cache vs LLM vs cloud)
-- Scenario classification histograms
-- JSON-exportable metrics for pandas/matplotlib analysis
-
-### Suggested Extensions for Stronger Publication
-
-- Baseline comparisons (rule-only pipeline, different LLM models)
-- Ablation study (remove Agent 3, Agent 5, or cache)
-- Statistical significance with larger datasets
-- False positive / false negative analysis
-- Integration with real sensor hardware
-- Context Layer integration for temporal reasoning
+| Architecture Block | Current Implementation |
+|---|---|
+| Cryptographic identity and attestation | `sensor_registry.py`, `SecurityAccessControl`, optional HMAC signatures |
+| Score-based continuous authorization | `TrustScoreAgent`, `TrustLevel`, PEP routing |
+| Runtime observability and audit logs | `logger.py`, `metrics.py`, audit chain in `support_services.py` |
+| Autonomous recovery manager | `safe_invoke` fallbacks, connectivity probing, local queues |
+| Multi-agent coordination | `pipeline.py` |
+| Fog microservices | Each agent/service is isolated by file/class |
+| Policy Enforcement Point | `ActionHandler` + `ACTION_WHITELIST` |
+| Local anomaly detection | `ValueSanityAgent` + `MultiLevelAnomalyDetector` |
+| Local fusion and feature extraction | `ContextManagerAgent` |
+| Agentic decision loop | `DecisionAgent` |
+| Local state / aggregated data | context history, `DecisionCache`, local queues, `state/` stores |
+| Cloud synchronization | `cloud_interface.py` + `cloud_sync.py` |
+| Updated models | `ModelUpdateStore` metadata install/rollback |
+| Digital twins | Interface pending; use context summaries and cloud sync outputs |
 
 ---
 
 ## Authors
 
-Lion
-Zaaa
-
+- Lion
+- Zaaa / Aziza
 

@@ -9,7 +9,8 @@ control over agent lifecycle and configuration.
 
 from __future__ import annotations
 
-from config import ACTION_WHITELIST, LOCAL_ACTION_MIN_SANITY_SCORE
+from actuator_adapters import ActuatorAdapter, build_actuator_adapter, make_command
+from config import ACTION_WHITELIST
 from cloud_interface import CloudInterface
 from models import TrustLevel
 from validation_agent import ValidationAgent
@@ -27,9 +28,11 @@ class ActionHandler:
         self,
         validation_agent: ValidationAgent | None = None,
         cloud: CloudInterface | None = None,
+        actuator: ActuatorAdapter | None = None,
     ):
         self.validation_agent = validation_agent or ValidationAgent()
         self.cloud = cloud or CloudInterface()
+        self.actuator = actuator or build_actuator_adapter()
 
     def route(
         self,
@@ -46,11 +49,7 @@ class ActionHandler:
         """
         context = context or {}
         if trust_level == TrustLevel.HIGH:
-            if not self._local_execution_allowed(context):
-                print("[POLICY] Local execution blocked - escalating for review")
-                cloud_result = self.cloud.escalate({**context, "decision": decision})
-                return f"cloud_decided: {cloud_result.get('cloud_decision')}"
-            return self.execute(action)
+            return self.execute(action, context)
         if trust_level == TrustLevel.MEDIUM:
             return self.request_validation(decision, context)
         return self.reject_and_alert(
@@ -58,25 +57,14 @@ class ActionHandler:
             context,
         )
 
-    @staticmethod
-    def _local_execution_allowed(context: dict) -> bool:
-        """Apply the final safety gate before automatic local actuation."""
-        return (
-            not bool(context.get("critical", False))
-            and float(context.get("sanity_score", 0.0))
-            >= LOCAL_ACTION_MIN_SANITY_SCORE
-            and not context.get("failed_fields", [])
-            and bool(context.get("policy_allowed", False))
-        )
-
-    def execute(self, action: str) -> str:
+    def execute(self, action: str, context: dict | None = None) -> str:
         """Execute a whitelisted action locally."""
         if action not in ACTION_WHITELIST:
             return self.reject_and_alert(
                 f"Blocked action '{action}' - not in whitelist"
             )
-        print(f"[ACTION] Executing: {action}")
-        return f"{action}_executed"
+        print(f"[ACTION] Dispatching: {action}")
+        return self.actuator.execute(make_command(action, context))
 
     def request_validation(
         self, decision: dict, context: dict | None = None
@@ -91,7 +79,7 @@ class ActionHandler:
             f"- {verdict['reasoning']}"
         )
         if verdict["verdict"] == "confirmed":
-            return self.execute(decision.get("action_required", "no_action"))
+            return self.execute(decision.get("action_required", "no_action"), context)
         cloud_result = self.cloud.escalate({**context, "decision": decision})
         return f"cloud_decided: {cloud_result.get('cloud_decision')}"
 
@@ -106,4 +94,3 @@ class ActionHandler:
             reason=reason,
         )
         return f"rejected: {reason}"
-
