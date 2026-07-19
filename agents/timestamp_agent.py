@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from config import FRESHNESS_LIMIT_SECONDS
+from config import FRESHNESS_LIMIT_SECONDS, FUTURE_TIMESTAMP_TOLERANCE_SECONDS
 from models import TimestampResult
 
 
@@ -22,10 +22,29 @@ class TimestampAgent:
         timestamp = sensor_data.get("timestamp", "")
 
         try:
-            reading_time = datetime.fromisoformat(timestamp).replace(
-                tzinfo=timezone.utc
-            )
+            if isinstance(timestamp, str) and timestamp.endswith("Z"):
+                timestamp = f"{timestamp[:-1]}+00:00"
+            reading_time = datetime.fromisoformat(timestamp)
+            if reading_time.tzinfo is None:
+                reading_time = reading_time.replace(tzinfo=timezone.utc)
+            else:
+                reading_time = reading_time.astimezone(timezone.utc)
+
             age_seconds = (datetime.now(timezone.utc) - reading_time).total_seconds()
+
+            if age_seconds < -FUTURE_TIMESTAMP_TOLERANCE_SECONDS:
+                return TimestampResult(
+                    passed=False,
+                    freshness_score=0.0,
+                    age_seconds=age_seconds,
+                    reason=(
+                        f"Timestamp is {-age_seconds:.0f}s in the future - "
+                        "clock error or forged reading"
+                    ),
+                )
+
+            # Small negative ages are tolerated as normal clock skew.
+            age_seconds = max(0.0, age_seconds)
 
             if age_seconds < 60:
                 score = 1.0
@@ -49,7 +68,7 @@ class TimestampAgent:
                 reason="Timestamp valid",
             )
 
-        except ValueError:
+        except (TypeError, ValueError):
             return TimestampResult(
                 passed=False,
                 freshness_score=0.0,

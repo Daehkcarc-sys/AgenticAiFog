@@ -22,6 +22,7 @@ class PipelineContext(TypedDict, total=False):
     scenario: str
     severity: str
     tinyml_recommendation: str | None
+    policy_allowed: bool
     raw_readings: dict
     decision: dict
 

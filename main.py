@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 from datetime import datetime, timezone, timedelta
@@ -7,8 +8,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from config import DATA_PATH
+from config import DATA_ARCHIVE_PATH, DATA_PATH, LOG_PATH, METRICS_PATH
 from decision_cache import DecisionCache
+from llm_factory import is_offline_mode, set_offline_mode
 from metrics import PipelineMetrics
 from pipeline import FogPipeline
 
@@ -74,8 +76,18 @@ def build_message(row: dict, sensor_id: str, scenario: str = "normal") -> dict:
     }
 
 
-def print_summary() -> None:
-    summary_path = Path("logs") / "decisions.json"
+def load_dataset() -> pd.DataFrame:
+    """Load the extracted CSV when present, otherwise read the bundled ZIP."""
+    if DATA_PATH.exists():
+        return pd.read_csv(DATA_PATH)
+    if DATA_ARCHIVE_PATH.exists():
+        return pd.read_csv(DATA_ARCHIVE_PATH, compression="zip")
+    raise FileNotFoundError(
+        f"Dataset not found at {DATA_PATH} or {DATA_ARCHIVE_PATH}"
+    )
+
+
+def print_summary(summary_path: Path = LOG_PATH) -> None:
     with summary_path.open("r", encoding="utf-8") as f:
         logs = json.load(f)
 
@@ -113,21 +125,44 @@ def print_summary() -> None:
     print("=" * 45)
 
 
-def main() -> None:
-    if not DATA_PATH.exists():
-        raise FileNotFoundError(f"Dataset not found: {DATA_PATH}")
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Run the fog pipeline demo")
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="disable all LLM imports, network probes, and API calls",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=50,
+        help="maximum dataset rows to process (default: 50)",
+    )
+    return parser.parse_args(argv)
 
-    logger.info("=== Fog Pipeline Starting ===")
-    df = pd.read_csv(DATA_PATH)
+
+def main(argv: list[str] | None = None) -> None:
+    args = parse_args(argv)
+    if args.limit < 1:
+        raise ValueError("--limit must be at least 1")
+
+    offline = args.offline or is_offline_mode()
+    set_offline_mode(offline)
+
+    logger.info(
+        "=== Fog Pipeline Starting (%s mode) ===",
+        "offline" if offline else "online",
+    )
+    df = load_dataset()
+
+    LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    LOG_PATH.write_text("[]", encoding="utf-8")
+
     metrics = PipelineMetrics()
     cache = DecisionCache(max_size=64, ttl_seconds=300)
     pipeline = FogPipeline(metrics=metrics, cache=cache)
 
-    log_file = Path("logs") / "decisions.json"
-    log_file.parent.mkdir(parents=True, exist_ok=True)
-    log_file.write_text("[]", encoding="utf-8")
-
-    for i, row in df.head(50).iterrows():
+    for i, row in df.head(args.limit).iterrows():
         logger.info("─── Reading %d ───────────────────────────", i + 1)
         if i % 7 == 0:
             sensor_id, scenario = "UNKNOWN_999", "normal"
@@ -145,7 +180,7 @@ def main() -> None:
 
     # ── Final reports ──────────────────────────────────────
     print(metrics.report())
-    print_summary()
+    print_summary(LOG_PATH)
 
     # Cache statistics
     cache_stats = pipeline.cache_stats
@@ -158,9 +193,11 @@ def main() -> None:
         )
 
     # Persist metrics for offline analysis / publication figures
-    metrics_path = Path("logs") / "metrics.json"
-    metrics_path.write_text(json.dumps(metrics.to_dict(), indent=2), encoding="utf-8")
-    logger.info("Metrics saved to %s", metrics_path)
+    METRICS_PATH.write_text(
+        json.dumps(metrics.to_dict(), indent=2),
+        encoding="utf-8",
+    )
+    logger.info("Metrics saved to %s", METRICS_PATH)
 
 
 if __name__ == "__main__":

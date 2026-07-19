@@ -9,7 +9,7 @@ control over agent lifecycle and configuration.
 
 from __future__ import annotations
 
-from config import ACTION_WHITELIST
+from config import ACTION_WHITELIST, LOCAL_ACTION_MIN_SANITY_SCORE
 from cloud_interface import CloudInterface
 from models import TrustLevel
 from validation_agent import ValidationAgent
@@ -46,12 +46,27 @@ class ActionHandler:
         """
         context = context or {}
         if trust_level == TrustLevel.HIGH:
+            if not self._local_execution_allowed(context):
+                print("[POLICY] Local execution blocked - escalating for review")
+                cloud_result = self.cloud.escalate({**context, "decision": decision})
+                return f"cloud_decided: {cloud_result.get('cloud_decision')}"
             return self.execute(action)
         if trust_level == TrustLevel.MEDIUM:
             return self.request_validation(decision, context)
         return self.reject_and_alert(
             decision.get("reasoning", "low trust"),
             context,
+        )
+
+    @staticmethod
+    def _local_execution_allowed(context: dict) -> bool:
+        """Apply the final safety gate before automatic local actuation."""
+        return (
+            not bool(context.get("critical", False))
+            and float(context.get("sanity_score", 0.0))
+            >= LOCAL_ACTION_MIN_SANITY_SCORE
+            and not context.get("failed_fields", [])
+            and bool(context.get("policy_allowed", False))
         )
 
     def execute(self, action: str) -> str:

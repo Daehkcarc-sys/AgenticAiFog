@@ -13,6 +13,7 @@ Exports:
 """
 
 from agents.criticality_agent import CriticalityAgent
+from agents.context_manager_agent import ContextManagerAgent
 from agents.data_validation_agent import DataValidationAgent
 from agents.decision_agent import DecisionAgent
 from agents.timestamp_agent import TimestampAgent
@@ -20,6 +21,7 @@ from agents.trust_score_agent import TrustScoreAgent
 from agents.value_sanity_agent import ValueSanityAgent
 
 __all__ = [
+    "ContextManagerAgent",
     "CriticalityAgent",
     "DataValidationAgent",
     "DecisionAgent",

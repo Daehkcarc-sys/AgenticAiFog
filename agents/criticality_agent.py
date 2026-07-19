@@ -62,10 +62,10 @@ Respond ONLY with this JSON, nothing else:
 
 CRITICALITY_FALLBACK: dict = {
     "passed": True,
-    "critical": False,
-    "scenario": CriticalityScenario.NORMAL.value,
-    "severity": "low",
-    "reasoning": "LLM unavailable - defaulting to Normal",
+    "critical": True,
+    "scenario": CriticalityScenario.EQUIPMENT_FAILURE.value,
+    "severity": "medium",
+    "reasoning": "Unclassified anomaly while LLM unavailable - conservative escalation",
 }
 
 # Ensure the fallback scenario is valid
@@ -87,6 +87,12 @@ class CriticalityAgent:
     _SKIP_LLM_CONFIDENCE: float = 0.85
 
     def run(self, raw_readings: dict, tinyml_output: dict) -> CriticalityResult:
+        # Clear safety-relevant cases are resolved locally. These rules are
+        # also the primary classifier during explicit offline execution.
+        rule_result = self._classify_with_rules(raw_readings)
+        if rule_result is not None:
+            return rule_result
+
         # ── Deterministic pre-gate: skip LLM for clearly normal data ──
         if self._looks_normal(raw_readings, tinyml_output):
             return CriticalityResult(
@@ -122,14 +128,14 @@ class CriticalityAgent:
     @staticmethod
     def _looks_normal(raw_readings: dict, tinyml_output: dict) -> bool:
         """Return True if readings are clearly normal — no LLM needed."""
-        from config import VALID_RANGES
+        from config import NORMAL_OPERATING_RANGES
 
         confidence = tinyml_output.get("confidence", 0.0)
         if not isinstance(confidence, (int, float)) or confidence < CriticalityAgent._SKIP_LLM_CONFIDENCE:
             return False
 
         # Require at least 4 core fields to be present and in-range
-        core_fields = {"soil_moisture", "temperature", "humidity", "ph"}
+        core_fields = set(NORMAL_OPERATING_RANGES)
         passed = 0
         for field in core_fields:
             value = raw_readings.get(field)
@@ -137,8 +143,83 @@ class CriticalityAgent:
                 continue
             if not isinstance(value, (int, float)):
                 return False
-            min_val, max_val = VALID_RANGES.get(field, (float("-inf"), float("inf")))
+            min_val, max_val = NORMAL_OPERATING_RANGES[field]
             if min_val <= value <= max_val:
                 passed += 1
 
         return passed >= 4
+
+    @staticmethod
+    def _classify_with_rules(raw_readings: dict) -> CriticalityResult | None:
+        """Classify clear agricultural events without an LLM."""
+        from config import VALID_RANGES
+
+        for field, (minimum, maximum) in VALID_RANGES.items():
+            value = raw_readings.get(field)
+            if isinstance(value, (int, float)) and not minimum <= value <= maximum:
+                return CriticalityResult(
+                    passed=True,
+                    critical=True,
+                    scenario=CriticalityScenario.EQUIPMENT_FAILURE.value,
+                    severity="high",
+                    reasoning=f"{field}={value} is outside its physical range",
+                )
+
+        moisture = raw_readings.get("soil_moisture")
+        temperature = raw_readings.get("temperature")
+        humidity = raw_readings.get("humidity")
+        ph = raw_readings.get("ph")
+
+        if isinstance(temperature, (int, float)) and temperature > 35:
+            return CriticalityResult(
+                passed=True,
+                critical=True,
+                scenario=CriticalityScenario.HEAT_STRESS.value,
+                severity="high" if temperature >= 45 else "medium",
+                reasoning=f"Temperature {temperature}C exceeds the crop-safe range",
+            )
+
+        if isinstance(moisture, (int, float)) and moisture < 40:
+            return CriticalityResult(
+                passed=True,
+                critical=True,
+                scenario=CriticalityScenario.WATER_DEFICIT.value,
+                severity="high" if moisture < 20 else "medium",
+                reasoning=f"Soil moisture {moisture}% indicates water deficit",
+            )
+
+        if isinstance(moisture, (int, float)) and moisture > 70:
+            return CriticalityResult(
+                passed=True,
+                critical=True,
+                scenario=CriticalityScenario.FLOODING.value,
+                severity="high" if moisture >= 85 else "medium",
+                reasoning=f"Soil moisture {moisture}% indicates excess water",
+            )
+
+        if isinstance(ph, (int, float)) and not 5.5 <= ph <= 8.0:
+            return CriticalityResult(
+                passed=True,
+                critical=True,
+                scenario=CriticalityScenario.SOIL_DEGRADATION.value,
+                severity="medium",
+                reasoning=f"Soil pH {ph} is outside the conservative operating range",
+            )
+
+        if (
+            isinstance(humidity, (int, float))
+            and isinstance(temperature, (int, float))
+            and humidity > 85
+            and 18 <= temperature <= 35
+        ):
+            return CriticalityResult(
+                passed=True,
+                critical=True,
+                scenario=CriticalityScenario.DISEASE_RISK.value,
+                severity="medium",
+                reasoning=(
+                    f"Humidity {humidity}% at {temperature}C creates disease-favorable conditions"
+                ),
+            )
+
+        return None
