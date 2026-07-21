@@ -78,7 +78,7 @@ class DecisionAgent:
         tinyml_action = str(pipeline_context.get("tinyml_recommendation", ""))
 
         # ── Tier 1: deterministic rules ─────────────────
-        rule_result = self._try_rules(trust_level, tinyml_action)
+        rule_result = self._try_rules(trust_level, tinyml_action, pipeline_context)
         if rule_result is not None:
             return rule_result
 
@@ -108,12 +108,20 @@ class DecisionAgent:
     def _try_rules(
         trust_level: TrustLevel | str,
         tinyml_action: str,
+        pipeline_context: dict[str, Any],
     ) -> DecisionResult | None:
         """Attempt deterministic resolution.  Returns None if no rule matches."""
+        safety_gate_open = (
+            not pipeline_context.get("critical", False)
+            and float(pipeline_context.get("sanity_score", 0.0)) >= 0.8
+            and pipeline_context.get("policy_allowed", True)
+        )
+
         # HIGH trust + simple action → act locally
         if (
             trust_level in (TrustLevel.HIGH, "HIGH")
             and tinyml_action in _HIGH_TRUST_ACTIONS
+            and safety_gate_open
         ):
             return DecisionResult(
                 reasoning=(
@@ -123,6 +131,17 @@ class DecisionAgent:
                 decision="act_locally",
                 action_required=tinyml_action,
                 source="rule",
+            )
+
+        if trust_level in (TrustLevel.HIGH, "HIGH") and not safety_gate_open:
+            return DecisionResult(
+                reasoning=(
+                    "High trust reading requires fallback because a safety gate "
+                    "blocked local execution"
+                ),
+                decision="validate",
+                action_required="validation",
+                source="fallback",
             )
 
         # LOW trust → always reject (ActionHandler enforces this)

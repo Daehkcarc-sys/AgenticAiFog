@@ -48,6 +48,9 @@ class ActionHandler:
         - LOW    → reject and notify cloud
         """
         context = context or {}
+        if context.get("critical"):
+            cloud_result = self.cloud.escalate({**context, "decision": decision})
+            return f"cloud_decided: {cloud_result.get('cloud_decision')}"
         if trust_level == TrustLevel.HIGH:
             return self.execute(action, context)
         if trust_level == TrustLevel.MEDIUM:
@@ -59,6 +62,8 @@ class ActionHandler:
 
     def execute(self, action: str, context: dict | None = None) -> str:
         """Execute a whitelisted action locally."""
+        if action == "no_action":
+            return "no_action_executed"
         if action not in ACTION_WHITELIST:
             return self.reject_and_alert(
                 f"Blocked action '{action}' - not in whitelist"
