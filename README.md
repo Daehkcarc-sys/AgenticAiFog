@@ -15,7 +15,7 @@ The code is ready for teammates to continue ML, Kafka, edge/hardware, and digita
 
 | Area | Owner |
 |---|---|
-| Agentic context, criticality, documentation | Zaaa / Aziza |
+| Agentic context, criticality, documentation | Zaaa |
 | Agentic decision, safety gates, pipeline stability | Lion |
 | ML scenario modeling and model evaluation | Sonic + Sarra |
 | Kafka/cloud synchronization | Limon |
