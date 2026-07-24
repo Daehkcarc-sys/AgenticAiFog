@@ -1,6 +1,6 @@
 # Agentic AI Fog — Trust-Oriented Agricultural Digital Twin
 
-> **Fog Node Implementation** · Python 3.14 · LangChain + Groq · Zero Trust
+> **Fog Node Implementation** · Python 3.14 · LangChain + Groq · Zero Trust.
 
 A production-quality research prototype implementing the Fog layer of a
 **Trust-Oriented Cloud–Fog–Edge Agricultural Digital Twin Architecture**.
