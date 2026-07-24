@@ -1,8 +1,8 @@
-"""Typed contracts for fog pipeline communication.
+﻿"""Typed contracts for fog pipeline communication.
 
 TypedDicts document the shape of dicts that flow between pipeline
 components.  Agent outputs now use structured dataclasses from
-``models.py`` — these TypedDicts cover only the remaining dict-based
+``models.py`` â€” these TypedDicts cover only the remaining dict-based
 interfaces (pipeline context, validation verdicts, cloud decisions).
 """
 
@@ -29,6 +29,7 @@ class PipelineContext(TypedDict, total=False):
     derived_features: dict
     anomaly_indicators: dict
     multi_level_anomalies: dict
+    multimodal_fusion: dict
     resource_snapshot: dict
     connectivity: dict
     local_rules: dict
@@ -50,3 +51,4 @@ class CloudDecision(TypedDict):
     reasoning: str
     send_back_to_fog: bool
     updated_policy: str | None
+

@@ -1,14 +1,12 @@
-# cloud_interface.py
-# Simulates cloud layer responses when fog escalates
-# In production this would use Apache Kafka (see architecture diagram)
-# Topics: sensor-data, critical-events, trust-events, fog-decisions
+﻿"""Cloud integration boundary for fog escalation, events, and model updates."""
 
 from __future__ import annotations
 
 import json
 from typing import Any
 
-from cloud_sync import DEFAULT_CLOUD_TOPIC, ModelUpdateStore, build_cloud_publisher
+from cloud_events import TOPICS, topic_for_event
+from cloud_sync import ModelUpdateStore, build_cloud_publisher
 from llm_factory import safe_invoke
 
 CLOUD_PROMPT = """
@@ -46,8 +44,10 @@ class CloudInterface:
         self.model_store = ModelUpdateStore()
 
     def escalate(self, context: dict) -> dict:
-        self.publisher.publish("fog-decisions", context)
-        print("[CLOUD] Published escalation to 'fog-decisions'")
+        self._publish_event("fog_decision", context, TOPICS["fog_decisions"])
+        if context.get("critical"):
+            self._publish_event("critical_event", context, TOPICS["critical_events"])
+        print("[CLOUD] Published escalation to cloud topics")
         print("[CLOUD] Global platform processing...")
 
         user_message = f"""
@@ -66,21 +66,23 @@ Respond ONLY with JSON.
         return safe_invoke(CLOUD_PROMPT, user_message, CLOUD_FALLBACK)
 
     def notify_rejection(self, sensor_id: str, reason: str) -> None:
-        self.publisher.publish(
-            "trust-events",
-            {"sensor_id": sensor_id, "reason": reason},
+        self._publish_event(
+            "trust_event",
+            {"sensor_id": sensor_id, "reason": reason, "event": "rejected"},
+            TOPICS["trust_events"],
         )
-        print(f"[CLOUD] Published rejection event to 'trust-events' topic")
+        print("[CLOUD] Published rejection event to 'trust-events' topic")
         print(f"[CLOUD] Logging rejection for sensor {sensor_id}: {reason}")
 
     def upload_summary(self, summary: dict[str, Any]) -> None:
         """Upload compact fog summaries through the configured publisher."""
-        status = self.publisher.publish(DEFAULT_CLOUD_TOPIC, summary)
+        status = self._publish_event("fog_summary", summary, topic_for_event("fog_summary", summary))
         print(f"[CLOUD] Summary publish status: {status}")
         self.uploaded_summaries.append(summary)
 
     def receive_model_update(self, update: dict[str, Any]) -> None:
         """Install and activate a validated model update."""
+        self._publish_event("model_update", update, TOPICS["model_updates"])
         installed = self.model_store.install_update(update)
         self.received_model_updates.append(installed)
 
@@ -94,3 +96,9 @@ Respond ONLY with JSON.
             "model_store": self.model_store.status(),
             "publisher": type(self.publisher).__name__,
         }
+
+    def _publish_event(self, event_type: str, payload: dict[str, Any], topic: str) -> str:
+        if hasattr(self.publisher, "publish_event"):
+            return self.publisher.publish_event(event_type, payload, topic)
+        event_payload = {"event_type": event_type, **payload}
+        return self.publisher.publish(topic, event_payload)

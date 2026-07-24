@@ -1,20 +1,25 @@
-"""Cloud synchronization adapters and local model update store."""
+﻿"""Cloud synchronization adapters, retry/dead-letter support, and model store."""
 
 from __future__ import annotations
 
 import hashlib
 import json
 import shutil
+import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib import request
 
+from cloud_events import TOPICS, envelope, validate_event
 from config import (
     CLOUD_HTTP_ENDPOINT,
     CLOUD_KAFKA_BOOTSTRAP,
+    CLOUD_KAFKA_DEAD_LETTER_TOPIC,
     CLOUD_KAFKA_TOPIC,
+    CLOUD_PUBLISH_BACKOFF_SECONDS,
+    CLOUD_PUBLISH_RETRIES,
     CLOUD_SYNC_MODE,
     MODEL_STORE_PATH,
     QUEUE_DIR,
@@ -82,17 +87,76 @@ class KafkaPublisher(CloudPublisher):
         return "sent_kafka"
 
 
+class ReliableCloudPublisher(CloudPublisher):
+    """Adds validation, retry/backoff, and local dead-letter fallback."""
+
+    def __init__(
+        self,
+        inner: CloudPublisher,
+        retries: int = CLOUD_PUBLISH_RETRIES,
+        backoff_seconds: float = CLOUD_PUBLISH_BACKOFF_SECONDS,
+        dead_letter: CloudPublisher | None = None,
+        dead_letter_topic: str = CLOUD_KAFKA_DEAD_LETTER_TOPIC,
+    ) -> None:
+        self.inner = inner
+        self.retries = max(0, retries)
+        self.backoff_seconds = max(0.0, backoff_seconds)
+        self.dead_letter = dead_letter or LocalQueuePublisher(QUEUE_DIR / "cloud_dead_letter.jsonl")
+        self.dead_letter_topic = dead_letter_topic
+
+    def publish(self, topic: str, payload: dict[str, Any]) -> str:
+        validate_event(payload)
+        last_error: Exception | None = None
+        for attempt in range(self.retries + 1):
+            try:
+                return self.inner.publish(topic, payload)
+            except Exception as exc:  # noqa: BLE001 - boundary must catch adapter failures
+                last_error = exc
+                if attempt < self.retries and self.backoff_seconds:
+                    time.sleep(self.backoff_seconds * (attempt + 1))
+        dead_letter_payload = envelope(
+            "dead_letter",
+            {
+                "failed_topic": topic,
+                "failed_event": payload,
+                "error": str(last_error),
+                "attempts": self.retries + 1,
+            },
+        )
+        self.dead_letter.publish(self.dead_letter_topic, dead_letter_payload)
+        return "queued_dead_letter"
+
+
+class CloudEventPublisher(CloudPublisher):
+    """Publishes raw payloads as versioned events with automatic topic routing."""
+
+    def __init__(self, inner: CloudPublisher) -> None:
+        self.inner = inner
+
+    def publish_event(self, event_type: str, payload: dict[str, Any], topic: str | None = None) -> str:
+        event = envelope(event_type, payload)
+        resolved_topic = topic or TOPICS.get(event_type) or CLOUD_KAFKA_TOPIC
+        return self.inner.publish(resolved_topic, event)
+
+    def publish(self, topic: str, payload: dict[str, Any]) -> str:
+        event_type = payload.get("event_type", "fog_summary") if isinstance(payload, dict) else "fog_summary"
+        event = payload if isinstance(payload, dict) and "schema_version" in payload else envelope(event_type, payload)
+        return self.inner.publish(topic, event)
+
+
 def build_cloud_publisher() -> CloudPublisher:
     mode = CLOUD_SYNC_MODE.lower()
     if mode == "http":
         if not CLOUD_HTTP_ENDPOINT:
             raise ValueError("CLOUD_HTTP_ENDPOINT is required for CLOUD_SYNC_MODE=http")
-        return HttpPublisher(CLOUD_HTTP_ENDPOINT)
-    if mode == "kafka":
+        base: CloudPublisher = HttpPublisher(CLOUD_HTTP_ENDPOINT)
+    elif mode == "kafka":
         if not CLOUD_KAFKA_BOOTSTRAP:
             raise ValueError("CLOUD_KAFKA_BOOTSTRAP is required for CLOUD_SYNC_MODE=kafka")
-        return KafkaPublisher(CLOUD_KAFKA_BOOTSTRAP)
-    return LocalQueuePublisher()
+        base = KafkaPublisher(CLOUD_KAFKA_BOOTSTRAP)
+    else:
+        base = LocalQueuePublisher()
+    return CloudEventPublisher(ReliableCloudPublisher(base))
 
 
 @dataclass
@@ -195,3 +259,4 @@ class ModelUpdateStore:
 
 
 DEFAULT_CLOUD_TOPIC = CLOUD_KAFKA_TOPIC
+

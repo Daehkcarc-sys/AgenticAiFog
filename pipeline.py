@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from contextlib import contextmanager
 from time import perf_counter
@@ -16,6 +16,7 @@ from agents import (
     ValueSanityAgent,
 )
 from config import ACTION_WHITELIST, TRUST_LEVEL_THRESHOLDS
+from context.multimodal_fusion import MultimodalFusionAgent
 from contracts import PipelineContext
 from decision_cache import DecisionCache
 from llm_factory import connectivity_stats
@@ -53,6 +54,7 @@ class FogPipeline:
         self.sanity_agent = ValueSanityAgent()
         self.context_manager = ContextManagerAgent()
         self.anomaly_detector = MultiLevelAnomalyDetector()
+        self.multimodal_fusion = MultimodalFusionAgent()
         self.criticality_agent = CriticalityAgent()
         self.decision_agent = DecisionAgent(cache=cache)
         self.action_handler = ActionHandler()
@@ -73,7 +75,7 @@ class FogPipeline:
         m = self.metrics
         start_time = perf_counter()
 
-        # ── Trust Layer ───────────────────────────────────
+        # â”€â”€ Trust Layer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         with (m.measure("data_validation") if m else _null_context()):
             v = self.data_validator.run(sensor_data)
         print(f"[Agent 1 - Validation] {'PASS' if v.passed else 'FAIL'} {v.reason}")
@@ -115,7 +117,7 @@ class FogPipeline:
         if not s.passed:
             return self._reject(sensor_id, s.reason, trust_score, start_time)
 
-        # ── Context Layer ─────────────────────────────────
+        # â”€â”€ Context Layer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         with (m.measure("context") if m else _null_context()):
             ctx = self.context_manager.run(sensor_id, raw_readings, tinyml_output)
         print(
@@ -134,14 +136,23 @@ class FogPipeline:
             f"| Score: {anomaly_report.score}"
         )
 
+        with (m.measure("multimodal_fusion") if m else _null_context()):
+            multimodal = self.multimodal_fusion.run(
+                sensor_data.get("multimodal_inputs")
+                or sensor_data.get("multimodal_context")
+                or sensor_data.get("visual_features")
+            )
+        print(f"[Multimodal]          {multimodal.semantic_summary}")
+
         resource_snapshot = self.resource_monitor.snapshot()
         connectivity_status = self.connectivity_manager.status()
         context_payload = {
             **ctx.to_dict(),
             "multi_level_anomalies": anomaly_report.to_dict(),
+            "multimodal_fusion": multimodal.to_dict(),
         }
 
-        # ── Intelligence Layer ────────────────────────────
+        # â”€â”€ Intelligence Layer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         with (m.measure("criticality") if m else _null_context()):
             c = self.criticality_agent.run(
                 raw_readings,
@@ -173,6 +184,7 @@ class FogPipeline:
             "derived_features": ctx.derived_features,
             "anomaly_indicators": ctx.anomaly_indicators,
             "multi_level_anomalies": anomaly_report.to_dict(),
+            "multimodal_fusion": multimodal.to_dict(),
             "resource_snapshot": resource_snapshot.to_dict(),
             "connectivity": connectivity_status,
             "local_rules": self.local_rule_store.to_dict(),
@@ -188,7 +200,7 @@ class FogPipeline:
             f" | source: {decision_source}"
         )
 
-        # ── Enforcement Layer ─────────────────────────────
+        # â”€â”€ Enforcement Layer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         result = self.action_handler.route(
             d.action_required,
             d.to_dict(),
@@ -197,6 +209,22 @@ class FogPipeline:
         )
         security_context["action_authorized"] = self.security.authorize_action(
             d.action_required
+        )
+
+        explanation_trace = self._build_explanation_trace(
+            validation_reason=v.reason,
+            timestamp_reason=t.reason,
+            trust_score=trust_score,
+            trust_level=trust_level,
+            sanity_score=s.sanity_score,
+            failed_fields=s.failed_fields,
+            semantic_context=ctx.semantic_context,
+            anomaly_report=anomaly_report.to_dict(),
+            multimodal=multimodal.to_dict(),
+            criticality=c.to_dict(),
+            decision=d.to_dict(),
+            decision_source=decision_source,
+            enforcement_result=result,
         )
 
         sync_summary = {
@@ -208,6 +236,8 @@ class FogPipeline:
             "context_summary": ctx.semantic_context,
             "anomaly_severity": anomaly_report.severity,
             "connectivity": connectivity_status,
+            "multimodal_summary": multimodal.semantic_summary,
+            "explanation_trace": explanation_trace,
         }
         self.cloud_sync.enqueue_summary(sync_summary)
         if not connectivity_status.get("offline_mode"):
@@ -215,7 +245,7 @@ class FogPipeline:
                 self.action_handler.cloud.upload_summary(queued_summary)
             self.connectivity_manager.mark_cloud_success()
 
-        # ── Logging & Metrics ─────────────────────────────
+        # â”€â”€ Logging & Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         pipeline_latency_ms = round((perf_counter() - start_time) * 1000, 2)
         self.logger.log(
             sensor_id=sensor_id,
@@ -232,6 +262,8 @@ class FogPipeline:
                 "context_semantic": ctx.semantic_context,
                 "context_anomalies": ctx.anomaly_indicators,
                 "multi_level_anomalies": anomaly_report.to_dict(),
+                "multimodal_fusion": multimodal.to_dict(),
+                "explanation_trace": explanation_trace,
                 "resource_snapshot": resource_snapshot.to_dict(),
                 "connectivity": connectivity_status,
                 "security": security_context,
@@ -260,7 +292,7 @@ class FogPipeline:
             return None
         return self._cache.stats
 
-    # ── private helpers ──────────────────────────────────
+    # â”€â”€ private helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _get_trust_level(self, score: float) -> TrustLevel:
         if score >= TRUST_LEVEL_THRESHOLDS["HIGH"]:
@@ -305,6 +337,84 @@ class FogPipeline:
             self._sync_support_metrics()
         return result
 
+
+    @staticmethod
+    def _build_explanation_trace(
+        validation_reason: str,
+        timestamp_reason: str,
+        trust_score: float,
+        trust_level: TrustLevel,
+        sanity_score: float,
+        failed_fields: list[str],
+        semantic_context: str,
+        anomaly_report: dict,
+        multimodal: dict,
+        criticality: dict,
+        decision: dict,
+        decision_source: str,
+        enforcement_result: str,
+    ) -> dict:
+        """Create a readable layer-by-layer trace for audit and handover."""
+        layers = [
+            {
+                "layer": "trust",
+                "summary": (
+                    f"validation passed; {timestamp_reason}; trust={trust_score:.2f} "
+                    f"({trust_level.value if hasattr(trust_level, 'value') else trust_level})"
+                ),
+            },
+            {
+                "layer": "sanity",
+                "summary": (
+                    f"sanity={sanity_score:.2f}; failed_fields="
+                    f"{failed_fields if failed_fields else 'none'}"
+                ),
+            },
+            {
+                "layer": "context",
+                "summary": semantic_context,
+            },
+            {
+                "layer": "anomaly",
+                "summary": (
+                    f"severity={anomaly_report.get('severity')}; "
+                    f"score={anomaly_report.get('score')}"
+                ),
+            },
+            {
+                "layer": "multimodal_fusion",
+                "summary": multimodal.get("semantic_summary", "no multimodal context"),
+                "available": multimodal.get("available", False),
+                "limitations": multimodal.get("limitations", []),
+            },
+            {
+                "layer": "criticality",
+                "summary": (
+                    f"scenario={criticality.get('scenario')}; "
+                    f"severity={criticality.get('severity')}; "
+                    f"critical={criticality.get('critical')}"
+                ),
+                "reasoning": criticality.get("reasoning"),
+            },
+            {
+                "layer": "decision",
+                "summary": (
+                    f"source={decision_source}; decision={decision.get('decision')}; "
+                    f"action={decision.get('action_required')}"
+                ),
+                "reasoning": decision.get("reasoning"),
+            },
+            {
+                "layer": "enforcement",
+                "summary": f"result={enforcement_result}",
+            },
+        ]
+        return {
+            "schema_version": "1.0",
+            "summary": " -> ".join(layer["layer"] for layer in layers),
+            "layers": layers,
+        }
+
     def _sync_support_metrics(self) -> None:
         """Synchronize absolute cache and connectivity counters."""
         if self.metrics is None:
@@ -325,3 +435,5 @@ class FogPipeline:
 def _null_context() -> Iterator[None]:
     """A no-op context manager used when no metrics collector is attached."""
     yield
+
+

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import os
 from pathlib import Path
@@ -128,6 +128,9 @@ CLOUD_SYNC_MODE = os.getenv("CLOUD_SYNC_MODE", "local_queue")
 CLOUD_HTTP_ENDPOINT = os.getenv("CLOUD_HTTP_ENDPOINT")
 CLOUD_KAFKA_BOOTSTRAP = os.getenv("CLOUD_KAFKA_BOOTSTRAP")
 CLOUD_KAFKA_TOPIC = os.getenv("CLOUD_KAFKA_TOPIC", "sensor-data")
+CLOUD_KAFKA_DEAD_LETTER_TOPIC = os.getenv("CLOUD_KAFKA_DEAD_LETTER_TOPIC", "fog-dead-letter")
+CLOUD_PUBLISH_RETRIES = int(os.getenv("CLOUD_PUBLISH_RETRIES", "2"))
+CLOUD_PUBLISH_BACKOFF_SECONDS = float(os.getenv("CLOUD_PUBLISH_BACKOFF_SECONDS", "0.25"))
 CLOUD_HEALTH_URL = os.getenv("CLOUD_HEALTH_URL")
 
 SECURITY_HMAC_SECRET = os.getenv("SECURITY_HMAC_SECRET", "dev-fog-secret")
@@ -138,3 +141,10 @@ CRITICALITY_ENABLE_REMOTE_FALLBACK = (
     in {"1", "true", "yes", "on"}
 )
 CRITICALITY_AMBIGUITY_MARGIN = int(os.getenv("CRITICALITY_AMBIGUITY_MARGIN", "1"))
+
+
+DB_BACKEND = os.getenv("DB_BACKEND", "sqlite")
+DATABASE_URL = os.getenv("DATABASE_URL")
+FARM_ID = os.getenv("FARM_ID", "demo-farm")
+TWIN_SIMULATION_STEP_MINUTES = int(os.getenv("TWIN_SIMULATION_STEP_MINUTES", "10"))
+

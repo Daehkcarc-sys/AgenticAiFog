@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
 from enum import Enum
@@ -39,7 +39,7 @@ class CriticalityScenario(str, Enum):
     EQUIPMENT_FAILURE = "Equipment failure"
 
 
-# ── Structured Agent Results ──────────────────────────────────
+# â”€â”€ Structured Agent Results â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
 class FogAgentResult:
@@ -128,9 +128,10 @@ class DecisionResult(FogAgentResult):
     decision: str
     action_required: str
     source: str = "llm"  # "rule" | "cache" | "llm" | "cloud"
+    confidence: float = 0.5
 
 
-# ── Data Models ───────────────────────────────────────────────
+# â”€â”€ Data Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
 @dataclass
@@ -190,3 +191,4 @@ class LogEntry:
             "result": self.result,
             **{k: v for k, v in self.additional.items() if k != "logged_at"},
         }
+

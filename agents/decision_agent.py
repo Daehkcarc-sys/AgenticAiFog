@@ -1,10 +1,10 @@
-"""Intelligence Layer — hierarchical fog decision agent.
+﻿"""Intelligence Layer â€” hierarchical fog decision agent.
 
-Decision flow (cheapest → most expensive):
-  1. Deterministic rules  → returns immediately (no I/O)
-  2. Decision cache       → reuses recent similar decisions
-  3. LLM reasoning        → only invoked when rules + cache miss
-  4. Cloud escalation     → fallback on LLM failure
+Decision flow (cheapest â†’ most expensive):
+  1. Deterministic rules  â†’ returns immediately (no I/O)
+  2. Decision cache       â†’ reuses recent similar decisions
+  3. LLM reasoning        â†’ only invoked when rules + cache miss
+  4. Cloud escalation     â†’ fallback on LLM failure
 
 Each decision records its ``source`` so the pipeline can measure
 how often each tier was used.
@@ -18,7 +18,7 @@ from decision_cache import DecisionCache
 from llm_factory import safe_invoke
 from models import DecisionResult, TrustLevel
 
-# ── Deterministic rule definitions ─────────────────────────
+# â”€â”€ Deterministic rule definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 # When trust is HIGH and the TinyML recommendation is a simple farm
 # action, we can skip the LLM entirely.
@@ -77,12 +77,12 @@ class DecisionAgent:
         trust_level = pipeline_context.get("trust_level", TrustLevel.LOW)
         tinyml_action = str(pipeline_context.get("tinyml_recommendation", ""))
 
-        # ── Tier 1: deterministic rules ─────────────────
+        # â”€â”€ Tier 1: deterministic rules â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         rule_result = self._try_rules(trust_level, tinyml_action, pipeline_context)
         if rule_result is not None:
             return rule_result
 
-        # ── Tier 2: decision cache ──────────────────────
+        # â”€â”€ Tier 2: decision cache â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if self._cache is not None:
             cached = self._cache.lookup(pipeline_context)
             if cached is not None:
@@ -91,18 +91,19 @@ class DecisionAgent:
                     decision=cached.get("decision", "escalate"),
                     action_required=cached.get("action_required", "cloud"),
                     source="cache",
+                    confidence=float(cached.get("confidence", cached.get("cache_similarity", 0.8))),
                 )
 
-        # ── Tier 3: LLM reasoning ───────────────────────
+        # â”€â”€ Tier 3: LLM reasoning â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         llm_result = self._invoke_llm(pipeline_context)
 
-        # ── Store in cache for future reuse ─────────────
+        # â”€â”€ Store in cache for future reuse â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if self._cache is not None:
             self._cache.store(pipeline_context, llm_result.to_dict())
 
         return llm_result
 
-    # ── private helpers ────────────────────────────────────
+    # â”€â”€ private helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @staticmethod
     def _try_rules(
@@ -117,7 +118,7 @@ class DecisionAgent:
             and pipeline_context.get("policy_allowed", True)
         )
 
-        # HIGH trust + simple action → act locally
+        # HIGH trust + simple action â†’ act locally
         if (
             trust_level in (TrustLevel.HIGH, "HIGH")
             and tinyml_action in _HIGH_TRUST_ACTIONS
@@ -126,11 +127,12 @@ class DecisionAgent:
             return DecisionResult(
                 reasoning=(
                     f"High trust with straightforward action "
-                    f"'{tinyml_action}' — acting locally"
+                    f"'{tinyml_action}' â€” acting locally"
                 ),
                 decision="act_locally",
                 action_required=tinyml_action,
                 source="rule",
+                confidence=0.95,
             )
 
         if trust_level in (TrustLevel.HIGH, "HIGH") and not safety_gate_open:
@@ -142,20 +144,22 @@ class DecisionAgent:
                 decision="validate",
                 action_required="validation",
                 source="fallback",
+                confidence=0.55,
             )
 
-        # LOW trust → always reject (ActionHandler enforces this)
+        # LOW trust â†’ always reject (ActionHandler enforces this)
         if trust_level in (TrustLevel.LOW, "LOW"):
             return DecisionResult(
                 reasoning=(
-                    "Low trust score — rejecting to protect farm operations"
+                    "Low trust score â€” rejecting to protect farm operations"
                 ),
                 decision="reject",
                 action_required="cloud",
                 source="rule",
+                confidence=0.9,
             )
 
-        return None  # MEDIUM or complex HIGH → try cache / LLM
+        return None  # MEDIUM or complex HIGH â†’ try cache / LLM
 
     @staticmethod
     def _invoke_llm(pipeline_context: dict[str, Any]) -> DecisionResult:
@@ -190,4 +194,6 @@ class DecisionAgent:
                 "action_required", DECISION_FALLBACK["action_required"]
             ),
             source="llm",
+            confidence=float(result.get("confidence", 0.65)),
         )
+

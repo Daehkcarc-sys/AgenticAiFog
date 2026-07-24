@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import tempfile
 import unittest
@@ -130,6 +130,53 @@ class P0StabilizationTests(unittest.TestCase):
         self.assertNotEqual(bad_sanity.decision, "act_locally")
         self.assertNotEqual(blocked_policy.decision, "act_locally")
 
+
+    def test_decision_cache_reuses_similar_contexts(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            cache = DecisionCache(path=Path(temp_dir) / "cache.json", similarity_threshold=0.82)
+            base = decision_context(
+                trust_score=0.91,
+                trust_level=TrustLevel.MEDIUM,
+                tinyml_recommendation="irrigate",
+                scenario=CriticalityScenario.WATER_DEFICIT.value,
+                severity="medium",
+                critical=False,
+                sanity_score=0.96,
+                multi_level_anomalies={"severity": "medium", "score": 0.45},
+                derived_features={"soil_moisture_band": "moderate_deficit"},
+            )
+            cache.store(
+                base,
+                {
+                    "reasoning": "similar drought case",
+                    "decision": "validate",
+                    "action_required": "validation",
+                    "confidence": 0.78,
+                },
+            )
+
+            similar = {
+                **base,
+                "trust_score": 0.87,
+                "sanity_score": 0.93,
+                "multi_level_anomalies": {"severity": "medium", "score": 0.5},
+            }
+            cached = cache.lookup(similar)
+
+            self.assertIsNotNone(cached)
+            self.assertEqual(cached["decision"], "validate")
+            self.assertEqual(cached["cache_match_type"], "similarity")
+            self.assertGreaterEqual(cache.stats["similarity_hits"], 1)
+
+    def test_decision_agent_returns_confidence(self) -> None:
+        agent = DecisionAgent()
+        safe = agent.run(decision_context())
+        fallback = agent.run(decision_context(critical=True))
+
+        self.assertGreaterEqual(safe.confidence, 0.9)
+        self.assertGreater(fallback.confidence, 0.0)
+        self.assertIn("confidence", safe.to_dict())
+
     def test_enforcement_rechecks_critical_context(self) -> None:
         cloud = FakeCloud()
         handler = ActionHandler(cloud=cloud)
@@ -180,3 +227,4 @@ class P0StabilizationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
