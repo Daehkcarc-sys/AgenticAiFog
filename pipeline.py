@@ -152,6 +152,14 @@ class FogPipeline:
             "multimodal_fusion": multimodal.to_dict(),
         }
 
+        # Merge zone-level context when provided by ZoneFogPipeline (item 3).
+        zone_context = sensor_data.get("zone_context")
+        if zone_context:
+            context_payload["zone_context"] = zone_context
+            zone_findings = zone_context.get("anomaly_findings", [])
+            if zone_findings:
+                context_payload.setdefault("zone_anomaly_findings", zone_findings)
+
         # â”€â”€ Intelligence Layer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         with (m.measure("criticality") if m else _null_context()):
             c = self.criticality_agent.run(
@@ -189,6 +197,10 @@ class FogPipeline:
             "connectivity": connectivity_status,
             "local_rules": self.local_rule_store.to_dict(),
             "security": security_context,
+            # Link state from TelemetryRecord (item 4) — used by DecisionAgent
+            # for NTN-aware routing (item 5).
+            "link_state": sensor_data.get("link_state", "terrestrial"),
+            "zone_id": sensor_data.get("zone_id"),
         }
 
         with (m.measure("decision") if m else _null_context()):

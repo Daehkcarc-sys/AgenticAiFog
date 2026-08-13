@@ -159,7 +159,27 @@ class DecisionAgent:
                 confidence=0.9,
             )
 
-        return None  # MEDIUM or complex HIGH â†’ try cache / LLM
+        # NTN/offline link: avoid cloud escalation when unavailable or expensive
+        # (item 5 — NTN state affects task placement).
+        link_state = pipeline_context.get("link_state", "terrestrial")
+        if link_state == "offline" and trust_level in (TrustLevel.MEDIUM, "MEDIUM"):
+            return DecisionResult(
+                reasoning="Link offline — validating locally instead of escalating to cloud",
+                decision="validate",
+                action_required="validation",
+                source="rule",
+                confidence=0.7,
+            )
+        if link_state == "ntn" and trust_level in (TrustLevel.MEDIUM, "MEDIUM"):
+            return DecisionResult(
+                reasoning="NTN link active — high cost/latency; deferring to local validation",
+                decision="validate",
+                action_required="validation",
+                source="rule",
+                confidence=0.65,
+            )
+
+        return None  # MEDIUM + terrestrial, or complex HIGH â†’ try cache / LLM
 
     @staticmethod
     def _invoke_llm(pipeline_context: dict[str, Any]) -> DecisionResult:

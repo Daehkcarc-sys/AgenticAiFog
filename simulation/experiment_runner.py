@@ -1,4 +1,10 @@
-"""Command-line entry point for reproducible B0/B2 simulations."""
+"""Command-line entry point for reproducible B0–B5 simulations.
+
+Usage examples:
+    python -m simulation.experiment_runner --baseline all --seed 5
+    python -m simulation.experiment_runner --baseline B5 --seeds 5 10 15
+    python -m simulation.experiment_runner --baseline all --seeds 1 2 3 4 5 --output results.json
+"""
 
 from __future__ import annotations
 
@@ -85,14 +91,57 @@ def run_experiment(
     return summary
 
 
+def run_multi_seed(
+    baselines: list[Baseline],
+    seeds: list[int],
+    duration_minutes: int = 120,
+    sample_interval_minutes: int = 10,
+) -> dict[str, Any]:
+    """Run each baseline over multiple seeds; return per-baseline aggregates."""
+    results: dict[str, list[dict[str, Any]]] = {b.value: [] for b in baselines}
+    for seed in seeds:
+        for baseline in baselines:
+            summary = run_experiment(baseline, seed, duration_minutes, sample_interval_minutes)
+            results[baseline.value].append(summary)
+
+    aggregated: dict[str, Any] = {}
+    for bname, runs in results.items():
+        if not runs:
+            continue
+        metrics_to_agg = ["decision_coverage", "mean_latency_ms", "bytes_to_cloud",
+                          "communication_cost", "energy_units", "macro_f1_observed_abnormal",
+                          "false_alarm_rate"]
+        agg: dict[str, Any] = {"seeds": seeds, "n_runs": len(runs), "per_seed": runs}
+        for metric in metrics_to_agg:
+            values = [r[metric] for r in runs if r.get(metric) is not None]
+            if values:
+                mean = sum(values) / len(values)
+                variance = sum((v - mean) ** 2 for v in values) / len(values)
+                agg[f"{metric}_mean"] = round(mean, 4)
+                agg[f"{metric}_std"] = round(variance ** 0.5, 4)
+        aggregated[bname] = agg
+    return aggregated
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--baseline", choices=["B0", "B2", "all"], default="all")
+    parser.add_argument(
+        "--baseline",
+        choices=["B0", "B1", "B2", "B3", "B4", "B5", "all"],
+        default="all",
+    )
     parser.add_argument(
         "--seed",
         type=int,
         default=5,
-        help="Seed 5 exercises terrestrial, NTN, and offline states in the default run",
+        help="Single seed (ignored when --seeds is used)",
+    )
+    parser.add_argument(
+        "--seeds",
+        type=int,
+        nargs="+",
+        default=None,
+        help="Multiple seeds for multi-seed runs (e.g. 1 2 3 4 5)",
     )
     parser.add_argument("--duration-minutes", type=int, default=120)
     parser.add_argument("--sample-interval-minutes", type=int, default=10)
@@ -104,15 +153,26 @@ def main() -> None:
         if args.baseline == "all"
         else [Baseline(args.baseline)]
     )
-    result = {
-        baseline.value: run_experiment(
-            baseline,
-            args.seed,
+
+    if args.seeds and len(args.seeds) > 1:
+        result = run_multi_seed(
+            baselines,
+            args.seeds,
             args.duration_minutes,
             args.sample_interval_minutes,
         )
-        for baseline in baselines
-    }
+    else:
+        seeds = args.seeds or [args.seed]
+        result = {
+            baseline.value: run_experiment(
+                baseline,
+                seeds[0],
+                args.duration_minutes,
+                args.sample_interval_minutes,
+            )
+            for baseline in baselines
+        }
+
     rendered = json.dumps(result, indent=2)
     print(rendered)
     if args.output:

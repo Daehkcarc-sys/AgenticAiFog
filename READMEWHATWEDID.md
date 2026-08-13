@@ -12,16 +12,22 @@ The project now has:
 - A safer, deterministic fog-agent pipeline that can run fully offline.
 - A canonical telemetry contract shared by simulation, context, and dataset
   preparation.
-- Rolling zone context and basic cross-sensor anomaly detection.
+- Rolling zone context and cross-sensor anomaly detection, connected to FogPipeline.
+- A `TelemetryRecord → FogPipeline` adapter and integrated zone pipeline (`ZoneFogPipeline`).
+- NTN/offline-aware routing in the DecisionAgent.
 - Controlled agricultural events and independent sensor-fault injection.
 - A configurable terrestrial/NTN/offline Markov connectivity model.
-- Runnable SimPy B0 cloud-only and B2 static-fog baselines.
+- All six SimPy baselines: B0 cloud-only, B1 edge-only, B2 static-fog,
+  B3 direct-LLM, B4 trust-aware fog, and B5 full proposed system.
+- Trust ROC-AUC evaluation, sensor fault detection from trust trajectories.
+- Pure-Python paired Wilcoxon signed-rank test and multi-seed statistical evaluation.
+- Kafka/Redpanda streaming stack with topic setup and CLI `--kafka` flag.
 - Reproducible synthetic and crop-proxy federated client datasets.
 - Twenty-one passing regression tests.
 
-This follows the supervisors' methodology well as an experimental foundation,
-but it is not yet the complete proposed B5 architecture. The main components
-still need to be integrated into one end-to-end workflow.
+The simulation-and-evaluation layer matches the supervisors' proposed methodology.
+What remains is real hardware integration (Raspberry Pi TinyML), federated learning
+aggregation, and substitution of synthetic results with real field data.
 
 ## 1. Existing fog pipeline improvements
 
@@ -283,25 +289,31 @@ record counts, class distributions, and limitations.
 |---|---|
 | Fog validation and timestamp checks | Implemented |
 | Lightweight source trust | Partial |
-| Rolling zone context | Implemented separately |
-| Derived agricultural features | Partial |
-| Cross-sensor anomaly checks | Basic implementation |
+| Rolling zone context | Implemented and connected to FogPipeline |
+| Derived agricultural features | Implemented (ZoneContext) |
+| Cross-sensor anomaly checks | Implemented (ZoneContextManager) |
 | Rule -> cache -> LLM routing | Partial |
 | Policy and action safety checks | Implemented |
 | Local logging and metrics | Implemented |
 | Synthetic controlled events | Implemented |
 | Independent sensor faults | Implemented |
 | Terrestrial/NTN/offline Markov chain | Implemented |
+| NTN-aware escalation routing | Implemented (DecisionAgent) |
 | SimPy | Implemented |
 | B0 cloud-only | Partial: processed records, not raw streams |
-| B1 edge-only | Missing |
-| B2 static fog | Implemented, without zone fusion |
-| B3 direct LLM | Missing |
-| B4 B2 plus trust | Missing |
-| B5 complete proposed system | Missing |
-| Trust ROC-AUC | Missing |
-| 30-50 seeded runs | Missing |
-| Paired Wilcoxon test | Missing |
+| B1 edge-only | Implemented (simulation/baselines.py) |
+| B2 static fog | Implemented, with zone context hook |
+| B3 direct LLM | Implemented (simulation/baselines.py) |
+| B4 trust-aware fog | Implemented (simulation/baselines.py) |
+| B5 complete proposed system | Implemented (simulation/baselines.py) |
+| TelemetryRecord → FogPipeline adapter | Implemented (simulation/fog_adapter.py) |
+| Integrated zone pipeline | Implemented (simulation/zone_pipeline.py) |
+| Trust ROC-AUC | Implemented (evaluation/trust_roc.py) |
+| Sensor trust history / fault detection | Implemented (evaluation/trust_history.py) |
+| 30-50 seeded runs | Runner implemented (evaluation/statistical_eval.py) |
+| Paired Wilcoxon test | Implemented (evaluation/wilcoxon.py) |
+| Confidence intervals and effect sizes | Implemented (evaluation/statistical_eval.py) |
+| Kafka/Redpanda streaming | Implemented (docker-compose.yml, cloud_sync.py) |
 | Real TinyML hardware integration | Separate/incomplete |
 | Cloud training and FL aggregation | Missing |
 
@@ -309,18 +321,18 @@ record counts, class distributions, and limitations.
 
 ### First: integrate the existing components
 
-1. Add a `TelemetryRecord -> FogPipeline` adapter.
-2. Synchronize records from multiple devices into zone time windows.
-3. Feed `ZoneContext` into Criticality and Decision Agents.
-4. Add context confidence, anomaly status, resource state, and link state to
-   the decision context.
-5. Make NTN state affect escalation, synchronization, and task placement.
+1. ✅ Add a `TelemetryRecord -> FogPipeline` adapter. → `simulation/fog_adapter.py`
+2. ✅ Synchronize records from multiple devices into zone time windows. → `simulation/zone_pipeline.py`
+3. ✅ Feed `ZoneContext` into Criticality and Decision Agents. → `pipeline.py`
+4. ✅ Add context confidence, anomaly status, resource state, and link state to
+   the decision context. → `pipeline.py` (`link_state`, `zone_id`, `zone_context`)
+5. ✅ Make NTN state affect escalation, synchronization, and task placement. → `agents/decision_agent.py`
 
 ### Then: complete the main B0/B2/B5 comparison
 
 6. Make B0 transmit simulated raw high-frequency streams.
 7. Add zone-level fusion to B2.
-8. Implement B5 in the same SimPy environment.
+8. ✅ Implement B5 in the same SimPy environment. → `simulation/baselines.py` (`B5_FULL_SYSTEM`)
 9. Count rule, cache, and LLM paths.
 10. Add LLM invocation cost.
 11. Measure event-occurrence-to-actuation latency.
@@ -328,17 +340,17 @@ record counts, class distributions, and limitations.
 
 ### Trust evaluation and ablations
 
-13. Maintain long-term reliability history per sensor.
-14. Update trust from injected drift, dropout, and stuck-at behavior.
-15. Calculate trust ROC-AUC against fault ground truth.
-16. Implement B1 edge-only, B3 direct-LLM, and B4 trust-aware static fog.
+13. ✅ Maintain long-term reliability history per sensor. → `evaluation/trust_history.py` (`SensorTrustHistory`)
+14. ✅ Update trust from injected drift, dropout, and stuck-at behavior. → `evaluation/trust_history.py`
+15. ✅ Calculate trust ROC-AUC against fault ground truth. → `evaluation/trust_roc.py`
+16. ✅ Implement B1 edge-only, B3 direct-LLM, and B4 trust-aware static fog. → `simulation/baselines.py`
 
 ### Statistical evaluation
 
-17. Run every baseline/scenario combination over 30-50 paired seeds.
-18. Store per-run results.
-19. Apply the paired Wilcoxon signed-rank test.
-20. Report confidence intervals and effect sizes.
+17. ✅ Run every baseline/scenario combination over 30-50 paired seeds. → `evaluation/statistical_eval.py`
+18. ✅ Store per-run results. → `simulation/experiment_runner.py` (`run_multi_seed`)
+19. ✅ Apply the paired Wilcoxon signed-rank test. → `evaluation/wilcoxon.py`
+20. ✅ Report confidence intervals and effect sizes. → `evaluation/statistical_eval.py`
 
 ### Hardware, cloud, and federated learning
 
