@@ -44,5 +44,25 @@
       redpanda:
         condition: service_healthy
 
+  fog-agent:
+    build: .
+    container_name: agentic-fog-agent
+    command: >
+      python main.py
+      --kafka
+      --kafka-bootstrap redpanda:29092
+      --offline
+      --limit 50
+    environment:
+      CLOUD_SYNC_MODE: kafka
+      CLOUD_KAFKA_BOOTSTRAP: redpanda:29092
+    volumes:
+      - ./data:/app/data
+      - ./state:/app/state
+      - ./logs:/app/logs
+    depends_on:
+      redpanda:
+        condition: service_healthy
+
 volumes:
   redpanda-data:

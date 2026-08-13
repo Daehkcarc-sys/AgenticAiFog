@@ -61,6 +61,11 @@ def summarize_outcomes(outcomes: list[DecisionOutcome]) -> dict[str, Any]:
         outcome.predicted_event is not CriticalityScenario.NORMAL
         for outcome in normal_decisions
     )
+    twin_risks = [
+        outcome.twin_risk_index
+        for outcome in outcomes
+        if getattr(outcome, "twin_risk_index", None) is not None
+    ]
     return {
         "baseline": outcomes[0].baseline.value if outcomes else None,
         "total_records": total,
@@ -81,6 +86,31 @@ def summarize_outcomes(outcomes: list[DecisionOutcome]) -> dict[str, Any]:
             sum(outcome.communication_cost for outcome in outcomes), 6
         ),
         "energy_units": round(sum(outcome.energy_units for outcome in outcomes), 3),
+        # Component-level energy (millijoules)
+        "edge_energy_mj": round(
+            sum(getattr(o, "edge_energy_mj", 0.0) for o in outcomes), 3
+        ),
+        "fog_energy_mj": round(
+            sum(getattr(o, "fog_energy_mj", 0.0) for o in outcomes), 3
+        ),
+        "cloud_energy_mj": round(
+            sum(getattr(o, "cloud_energy_mj", 0.0) for o in outcomes), 3
+        ),
+        "total_energy_mj": round(
+            sum(
+                getattr(o, "edge_energy_mj", 0.0)
+                + getattr(o, "fog_energy_mj", 0.0)
+                + getattr(o, "cloud_energy_mj", 0.0)
+                for o in outcomes
+            ),
+            3,
+        ),
+        # LLM API cost (USD proxy)
+        "llm_cost_usd": round(
+            sum(getattr(o, "llm_cost", 0.0) for o in outcomes), 6
+        ),
+        # Digital twin mean risk index (B5 only)
+        "twin_mean_risk_index": round(mean(twin_risks), 4) if twin_risks else None,
         "macro_f1_observed_abnormal": round(mean(observed_abnormal_f1), 4)
         if observed_abnormal_f1
         else 0.0,

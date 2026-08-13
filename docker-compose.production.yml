@@ -102,6 +102,22 @@
       - cloud-storage-consumer
       - digital-twin-service
 
+  fog-agent:
+    build: .
+    restart: unless-stopped
+    env_file: .env.production
+    command: python main.py --kafka --kafka-bootstrap redpanda:9092
+    environment:
+      CLOUD_SYNC_MODE: kafka
+      CLOUD_KAFKA_BOOTSTRAP: redpanda:9092
+    volumes:
+      - app-state:/app/state
+      - ./data:/app/data
+      - app-logs:/app/logs
+    depends_on:
+      redpanda:
+        condition: service_healthy
+
   backup:
     build: .
     restart: "no"
@@ -116,3 +132,4 @@ volumes:
   postgres-data:
   app-state:
   app-backups:
+  app-logs:

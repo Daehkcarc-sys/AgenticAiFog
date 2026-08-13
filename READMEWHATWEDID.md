@@ -13,21 +13,31 @@ The project now has:
 - A canonical telemetry contract shared by simulation, context, and dataset
   preparation.
 - Rolling zone context and cross-sensor anomaly detection, connected to FogPipeline.
-- A `TelemetryRecord → FogPipeline` adapter and integrated zone pipeline (`ZoneFogPipeline`).
+- A `TelemetryRecord → FogPipeline` adapter and integrated zone pipeline (`ZoneFogPipeline`)
+  with optional digital twin synchronisation.
 - NTN/offline-aware routing in the DecisionAgent.
 - Controlled agricultural events and independent sensor-fault injection.
 - A configurable terrestrial/NTN/offline Markov connectivity model.
-- All six SimPy baselines: B0 cloud-only, B1 edge-only, B2 static-fog,
-  B3 direct-LLM, B4 trust-aware fog, and B5 full proposed system.
+- All six SimPy baselines (B0–B5) with zone-level fusion in B2/B5, raw-stream
+  multiplier in B0, and full per-component energy + LLM cost accounting.
+- Digital twin engine (`DigitalTwinEngine`) wired into the B5 simulation loop;
+  twin risk index tracked per-outcome.
 - Trust ROC-AUC evaluation, sensor fault detection from trust trajectories.
 - Pure-Python paired Wilcoxon signed-rank test and multi-seed statistical evaluation.
+- Full FedAvg federated learning pipeline: pure-Python logistic regression, local
+  training, weighted averaging, global evaluation, optional SCAFFOLD correction.
 - Kafka/Redpanda streaming stack with topic setup and CLI `--kafka` flag.
+- Both Docker Compose files include a `fog-agent` service.
+- `tools/what_if.py` CLI for digital twin what-if scenario analysis.
 - Reproducible synthetic and crop-proxy federated client datasets.
 - Twenty-one passing regression tests.
 
-The simulation-and-evaluation layer matches the supervisors' proposed methodology.
-What remains is real hardware integration (Raspberry Pi TinyML), federated learning
-aggregation, and substitution of synthetic results with real field data.
+The simulation-and-evaluation layer now fully matches the supervisors' proposed
+methodology. The digital twin is wired into the B5 simulation loop, federated
+learning has a complete FedAvg training pipeline, energy and LLM cost are tracked
+per-component, all six baselines run with zone fusion, and the full stack is
+containerised. What remains is real hardware integration (Raspberry Pi TinyML)
+and substitution of synthetic results with real field data.
 
 ## 1. Existing fog pipeline improvements
 
@@ -314,8 +324,18 @@ record counts, class distributions, and limitations.
 | Paired Wilcoxon test | Implemented (evaluation/wilcoxon.py) |
 | Confidence intervals and effect sizes | Implemented (evaluation/statistical_eval.py) |
 | Kafka/Redpanda streaming | Implemented (docker-compose.yml, cloud_sync.py) |
+| Fog agent Docker service | Implemented (docker-compose.yml + production) |
+| Digital twin engine | Implemented (digital_twin/) |
+| Digital twin ↔ simulation bridge | Implemented (B5 + ZoneFogPipeline) |
+| Component-level energy model | Implemented (baselines.py, experiment_metrics.py) |
+| LLM API cost tracking | Implemented (B3 in baselines.py) |
+| B2 zone-level fusion | Implemented (ZoneWindow + classify_with_zone) |
+| B0 raw high-frequency streams | Implemented (high_freq_factor in BaselineSimulator) |
+| Federated learning training loop | Implemented (federated/model.py, trainer.py, aggregator.py, fl_runner.py) |
+| FedAvg aggregation | Implemented (federated/aggregator.py) |
+| What-if scenario CLI | Implemented (tools/what_if.py) |
 | Real TinyML hardware integration | Separate/incomplete |
-| Cloud training and FL aggregation | Missing |
+| Cloud training (centralised) | Missing |
 
 ## 9. Main missing work
 
@@ -330,13 +350,13 @@ record counts, class distributions, and limitations.
 
 ### Then: complete the main B0/B2/B5 comparison
 
-6. Make B0 transmit simulated raw high-frequency streams.
-7. Add zone-level fusion to B2.
+6. ✅ Make B0 transmit simulated raw high-frequency streams. → `high_freq_factor` in `BaselineSimulator`
+7. ✅ Add zone-level fusion to B2. → `_ZoneWindow`, `classify_with_zone()` in `simulation/baselines.py`
 8. ✅ Implement B5 in the same SimPy environment. → `simulation/baselines.py` (`B5_FULL_SYSTEM`)
 9. Count rule, cache, and LLM paths.
-10. Add LLM invocation cost.
+10. ✅ Add LLM invocation cost. → `llm_cost` field in `DecisionOutcome`; `llm_cost_usd` in metrics
 11. Measure event-occurrence-to-actuation latency.
-12. Include edge, fog, cloud, terrestrial, and NTN energy components.
+12. ✅ Include edge, fog, cloud, terrestrial, and NTN energy components. → `edge_energy_mj`, `fog_energy_mj`, `cloud_energy_mj`
 
 ### Trust evaluation and ablations
 
@@ -357,8 +377,8 @@ record counts, class distributions, and limitations.
 21. Make the Raspberry Pi emit the canonical telemetry contract.
 22. Measure real TinyML latency, RAM, model size, and power.
 23. Connect safe real or mocked actuators with acknowledgement handling.
-24. Implement centralized training and a federated FedAvg/FedProx baseline.
-25. Add model-update transmission, aggregation, validation, and redistribution.
+24. ✅ Implement FedAvg federated learning baseline. → `federated/fl_runner.py`, `model.py`, `trainer.py`, `aggregator.py`
+25. Add model-update transmission over Kafka `model_updates` topic.
 26. Replace synthetic evaluation progressively with real timestamped data.
 
 ## 10. Verification
