@@ -1,0 +1,40 @@
+{
+  "task": "tomato_yield_regression",
+  "selected_method": "FedAvg",
+  "selection_rule": "lowest mean MAE across 30 paired seeds",
+  "representative_seed": 104,
+  "target": "Y_TOT",
+  "normalized_unit": "t/ha",
+  "unit_status": "metadata: q",
+  "conversion_factor": 0.1,
+  "dataset": {
+    "plots": 100,
+    "experiments": 32,
+    "fog_clients": 9,
+    "client_definition": "experimental year"
+  },
+  "repeated_results": {
+    "method": "FedAvg",
+    "runs": 30,
+    "mae_mean": 10.998964889844258,
+    "mae_std": 2.244290259688519,
+    "mae_median": 10.84607720375061,
+    "mae_ci95_low": 10.247307109236717,
+    "mae_ci95_high": 11.80140293697516,
+    "rmse_mean": 13.980899546767729,
+    "rmse_std": 2.7469481231590174,
+    "rmse_ci95_low": 13.065673944537751,
+    "rmse_ci95_high": 14.996732384767629,
+    "r2_mean": 0.620034839803102,
+    "r2_std": 0.13065686627628037,
+    "communication_mb_mean": 2.3534671783447267,
+    "selection_rate_mean": 1.0
+  },
+  "limitations": [
+    "small dataset",
+    "year-based clients simulate Fog zones",
+    "Y_TOT source unit still needs documentary confirmation",
+    "no differential privacy or secure aggregation",
+    "no target Fog hardware latency benchmark yet"
+  ]
+}

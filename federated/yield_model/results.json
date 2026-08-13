@@ -1,0 +1,3195 @@
+{
+  "config": {
+    "algorithm": "fedavg",
+    "rounds": 25,
+    "local_epochs": 2,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "fedprox_mu": 0.01,
+    "seed": 104,
+    "batch_size": 8,
+    "participation_fraction": 1.0,
+    "event_driven": false,
+    "initial_data_fraction": 0.35,
+    "arrival_horizon_rounds": 12,
+    "min_new_samples": 2,
+    "local_mae_trigger": 15.0,
+    "event_cooldown_rounds": 2,
+    "max_staleness_rounds": 4,
+    "compression": "none",
+    "topk_fraction": 0.25,
+    "early_stopping_patience": 8,
+    "output_dir": "/kaggle/working/tomato_yield_fl_v4/seed_artifacts/seed_104/FedAvg"
+  },
+  "global_test": {
+    "mae": 10.859950065612793,
+    "rmse": 12.527642455882447,
+    "r2": 0.6938570288130519,
+    "mape": 0.2037396525531239,
+    "bias": 4.649082660675049,
+    "n": 16,
+    "y_true": [
+      72.23100280761719,
+      75.9260025024414,
+      79.28700256347656,
+      78.68499755859375,
+      86.4260025024414,
+      67.7040023803711,
+      62.16699981689453,
+      62.10200119018555,
+      29.39800262451172,
+      63.880001068115234,
+      97.88800048828125,
+      106.68000030517578,
+      27.625,
+      38.15169906616211,
+      87.43000030517578,
+      96.22000122070312
+    ],
+    "y_pred": [
+      85.05007934570312,
+      81.86212921142578,
+      85.50077056884766,
+      80.23412322998047,
+      79.22418212890625,
+      80.32539367675781,
+      64.12176513671875,
+      58.68909454345703,
+      52.83095169067383,
+      79.36433410644531,
+      113.3578109741211,
+      96.95020294189453,
+      47.183807373046875,
+      47.183807373046875,
+      76.39136505126953,
+      77.91622161865234
+    ]
+  },
+  "per_client_test": {
+    "year_2005": {
+      "mae": 8.322987874348959,
+      "rmse": 8.91023832108266,
+      "r2": -8.560674437754285,
+      "mape": 0.11134228409080467,
+      "bias": 8.322987874348959,
+      "n": 3,
+      "y_true": [
+        72.23100280761719,
+        75.9260025024414,
+        79.28700256347656
+      ],
+      "y_pred": [
+        85.0500717163086,
+        81.86212921142578,
+        85.50077056884766
+      ]
+    },
+    "year_2006": {
+      "mae": 7.124114990234375,
+      "rmse": 8.437328742612832,
+      "r2": -0.20654252916438476,
+      "mape": 0.09647909131646866,
+      "bias": 2.322901407877604,
+      "n": 3,
+      "y_true": [
+        78.68499755859375,
+        86.4260025024414,
+        67.7040023803711
+      ],
+      "y_pred": [
+        80.234130859375,
+        79.22418212890625,
+        80.32539367675781
+      ]
+    },
+    "year_2012": {
+      "mae": 1.9547653198242188,
+      "rmse": 1.9547653198242188,
+      "r2": null,
+      "mape": 0.03144377765666264,
+      "bias": 1.9547653198242188,
+      "n": 1,
+      "y_true": [
+        62.16699981689453
+      ],
+      "y_pred": [
+        64.12176513671875
+      ]
+    },
+    "year_2013": {
+      "mae": 13.42292594909668,
+      "rmse": 16.744414814161654,
+      "r2": -0.04857193563261686,
+      "mape": 0.42602478754323536,
+      "bias": 10.010019302368164,
+      "n": 2,
+      "y_true": [
+        62.10200119018555,
+        29.39800262451172
+      ],
+      "y_pred": [
+        58.68909454345703,
+        52.83094787597656
+      ]
+    },
+    "year_2014": {
+      "mae": 15.484333038330078,
+      "rmse": 15.484333038330078,
+      "r2": null,
+      "mape": 0.2423971944180016,
+      "bias": 15.484333038330078,
+      "n": 1,
+      "y_true": [
+        63.880001068115234
+      ],
+      "y_pred": [
+        79.36433410644531
+      ]
+    },
+    "year_2015": {
+      "mae": 15.469810485839844,
+      "rmse": 15.469810485839844,
+      "r2": null,
+      "mape": 0.15803582061819543,
+      "bias": 15.469810485839844,
+      "n": 1,
+      "y_true": [
+        97.88800048828125
+      ],
+      "y_pred": [
+        113.3578109741211
+      ]
+    },
+    "year_2016": {
+      "mae": 9.72979736328125,
+      "rmse": 9.72979736328125,
+      "r2": null,
+      "mape": 0.0912054493386535,
+      "bias": -9.72979736328125,
+      "n": 1,
+      "y_true": [
+        106.68000030517578
+      ],
+      "y_pred": [
+        96.95020294189453
+      ]
+    },
+    "year_2017": {
+      "mae": 14.295454025268555,
+      "rmse": 15.233609358781374,
+      "r2": -7.3768589973505385,
+      "mape": 0.47237642811006825,
+      "bias": 14.295454025268555,
+      "n": 2,
+      "y_true": [
+        27.625,
+        38.15169906616211
+      ],
+      "y_pred": [
+        47.18380355834961,
+        47.18380355834961
+      ]
+    },
+    "year_2018": {
+      "mae": 14.671207427978516,
+      "rmse": 15.114228660259712,
+      "r2": -10.82644257335823,
+      "mape": 0.15824263239486197,
+      "bias": -14.671207427978516,
+      "n": 2,
+      "y_true": [
+        87.43000030517578,
+        96.22000122070312
+      ],
+      "y_pred": [
+        76.39136505126953,
+        77.91622161865234
+      ]
+    }
+  },
+  "history": [
+    {
+      "round": 1,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 99108,
+      "round_seconds": 0.09739604899999676,
+      "local_losses": {
+        "year_2005": 0.14746752629677454,
+        "year_2006": 0.2494282325108846,
+        "year_2012": 0.2825215309858322,
+        "year_2013": 0.39481568336486816,
+        "year_2014": 0.2703051269054413,
+        "year_2015": 0.6625010967254639,
+        "year_2016": 0.9022086262702942,
+        "year_2017": 0.5419175028800964,
+        "year_2018": 0.5868577659130096
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 12,
+          "staleness_rounds": 1,
+          "latest_local_mae": null,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 12,
+          "staleness_rounds": 1,
+          "latest_local_mae": null,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 4,
+          "staleness_rounds": 1,
+          "latest_local_mae": null,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 8,
+          "staleness_rounds": 1,
+          "latest_local_mae": null,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 4,
+          "staleness_rounds": 1,
+          "latest_local_mae": null,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 6,
+          "staleness_rounds": 1,
+          "latest_local_mae": null,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 6,
+          "staleness_rounds": 1,
+          "latest_local_mae": null,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 8,
+          "staleness_rounds": 1,
+          "latest_local_mae": null,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 8,
+          "staleness_rounds": 1,
+          "latest_local_mae": null,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 21.426950216293335,
+      "rmse": 28.864490321814944,
+      "r2": -0.0982641125135677,
+      "mape": 0.3619923650792661,
+      "bias": 0.2847144603729248,
+      "n": 16
+    },
+    {
+      "round": 2,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 198216,
+      "round_seconds": 0.09959771000001183,
+      "local_losses": {
+        "year_2005": 0.059085660303632416,
+        "year_2006": 0.22342565407355627,
+        "year_2012": 0.4729002118110657,
+        "year_2013": 0.4053822457790375,
+        "year_2014": 0.1671629622578621,
+        "year_2015": 0.6392463743686676,
+        "year_2016": 1.022585690021515,
+        "year_2017": 0.5216199308633804,
+        "year_2018": 0.5719101428985596
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.948117574055989,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 10.182549794514975,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 28.6932373046875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 43.5324764251709,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 16.4813232421875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 24.92816925048828,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 62.94561004638672,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.366260528564453,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 31.296682357788086,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 20.108612298965454,
+      "rmse": 27.378553061717753,
+      "r2": 0.01190206777379721,
+      "mape": 0.33965744021144284,
+      "bias": -0.37824130058288574,
+      "n": 16
+    },
+    {
+      "round": 3,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 297324,
+      "round_seconds": 0.1004963159999761,
+      "local_losses": {
+        "year_2005": 0.0601503470291694,
+        "year_2006": 0.1517620338127017,
+        "year_2012": 0.37866945564746857,
+        "year_2013": 0.28568708896636963,
+        "year_2014": 0.21148589998483658,
+        "year_2015": 0.5351516753435135,
+        "year_2016": 0.7717587053775787,
+        "year_2017": 0.4513038396835327,
+        "year_2018": 0.5347984135150909
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 7.9297943115234375,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 7.538461049397786,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 26.853477478027344,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 41.452985763549805,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 14.356513977050781,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 23.73401641845703,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 60.23779296875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.0387115478515625,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 29.583925247192383,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 18.890313863754272,
+      "rmse": 25.87015770198278,
+      "r2": 0.11777947339800998,
+      "mape": 0.3198190336824886,
+      "bias": -0.8600647449493408,
+      "n": 16
+    },
+    {
+      "round": 4,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 396432,
+      "round_seconds": 0.09692939400002842,
+      "local_losses": {
+        "year_2005": 0.08061736697951953,
+        "year_2006": 0.14940143128236136,
+        "year_2012": 0.40331023931503296,
+        "year_2013": 0.41480302810668945,
+        "year_2014": 0.28119993954896927,
+        "year_2015": 0.568477600812912,
+        "year_2016": 0.757947564125061,
+        "year_2017": 0.4910493344068527,
+        "year_2018": 0.560603529214859
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.123845418294271,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.507340749104817,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 23.861038208007812,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 39.43796348571777,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 12.016242980957031,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 22.26654052734375,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 57.126731872558594,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.9271202087402344,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 28.17536735534668,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 18.131144762039185,
+      "rmse": 24.543704599048066,
+      "r2": 0.20592918115733871,
+      "mape": 0.30612418824378257,
+      "bias": -1.3126943111419678,
+      "n": 16
+    },
+    {
+      "round": 5,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 495540,
+      "round_seconds": 0.09377900199996247,
+      "local_losses": {
+        "year_2005": 0.05709770818551382,
+        "year_2006": 0.1378366028269132,
+        "year_2012": 0.20263898372650146,
+        "year_2013": 0.3357127755880356,
+        "year_2014": 0.16976504027843475,
+        "year_2015": 0.5768246650695801,
+        "year_2016": 0.5725325047969818,
+        "year_2017": 0.41115666925907135,
+        "year_2018": 0.45836709439754486
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.8306884765625,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.990332285563151,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 21.59857940673828,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 37.53497123718262,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 9.631454467773438,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 21.285324096679688,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 54.02821350097656,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.7085304260253906,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 26.80232810974121,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 17.289386510849,
+      "rmse": 23.38123774534899,
+      "r2": 0.27936723909027295,
+      "mape": 0.2912355231407125,
+      "bias": -1.5667297840118408,
+      "n": 16
+    },
+    {
+      "round": 6,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 594648,
+      "round_seconds": 0.09643018400004166,
+      "local_losses": {
+        "year_2005": 0.04454334576924642,
+        "year_2006": 0.12696555132667223,
+        "year_2012": 0.22392238676548004,
+        "year_2013": 0.3049718141555786,
+        "year_2014": 0.1347593069076538,
+        "year_2015": 0.5199288576841354,
+        "year_2016": 0.6433855295181274,
+        "year_2017": 0.31848711520433426,
+        "year_2018": 0.36545999348163605
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.817227681477865,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 7.106304168701172,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 18.853652954101562,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 35.68308067321777,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.360816955566406,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 20.365280151367188,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 52.09709930419922,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.3198699951171875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 25.588422775268555,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 16.580089330673218,
+      "rmse": 22.39501177152044,
+      "r2": 0.3388780200974221,
+      "mape": 0.27922971701601706,
+      "bias": -1.6682121753692627,
+      "n": 16
+    },
+    {
+      "round": 7,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 693756,
+      "round_seconds": 0.09306813200004171,
+      "local_losses": {
+        "year_2005": 0.06657097488641739,
+        "year_2006": 0.1064604427665472,
+        "year_2012": 0.3151555359363556,
+        "year_2013": 0.3105694353580475,
+        "year_2014": 0.17245572805404663,
+        "year_2015": 0.5046297609806061,
+        "year_2016": 0.6193132102489471,
+        "year_2017": 0.3794647753238678,
+        "year_2018": 0.4481040835380554
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.372965494791666,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 7.321750640869141,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 16.959861755371094,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 34.221574783325195,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.966377258300781,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 19.2916259765625,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 49.88317108154297,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.8192367553710938,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 24.507322311401367,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 15.866268157958984,
+      "rmse": 21.312669900052896,
+      "r2": 0.40123732093074105,
+      "mape": 0.26626574624748023,
+      "bias": -1.896829605102539,
+      "n": 16
+    },
+    {
+      "round": 8,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 792864,
+      "round_seconds": 0.09704514999998537,
+      "local_losses": {
+        "year_2005": 0.03982532164081931,
+        "year_2006": 0.11792820816238721,
+        "year_2012": 0.18765640258789062,
+        "year_2013": 0.26770901679992676,
+        "year_2014": 0.11301470547914505,
+        "year_2015": 0.44505394995212555,
+        "year_2016": 0.5628563463687897,
+        "year_2017": 0.27666792273521423,
+        "year_2018": 0.4307461678981781
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.525861104329428,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 7.651660919189453,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 15.953529357910156,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 32.49747848510742,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.74652099609375,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 18.390846252441406,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 47.04289245605469,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.701061248779297,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 23.398439407348633,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 14.93689513206482,
+      "rmse": 20.187467257986295,
+      "r2": 0.4627917462890103,
+      "mape": 0.2509360330522242,
+      "bias": -1.939835786819458,
+      "n": 16
+    },
+    {
+      "round": 9,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 891972,
+      "round_seconds": 0.09975576100003991,
+      "local_losses": {
+        "year_2005": 0.0471226933101813,
+        "year_2006": 0.12480190334220727,
+        "year_2012": 0.19950948283076286,
+        "year_2013": 0.2657439559698105,
+        "year_2014": 0.11622072011232376,
+        "year_2015": 0.4653782844543457,
+        "year_2016": 0.5043872743844986,
+        "year_2017": 0.24585187435150146,
+        "year_2018": 0.41286519169807434
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.354660034179688,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 7.377976735432942,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 14.220573425292969,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 30.756845474243164,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 2.6328048706054688,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 17.635528564453125,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 44.1883544921875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.3980712890625,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 22.40265464782715,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 13.953032493591309,
+      "rmse": 18.978804576038943,
+      "r2": 0.5251934364909003,
+      "mape": 0.23439071611848117,
+      "bias": -1.867171287536621,
+      "n": 16
+    },
+    {
+      "round": 10,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 991080,
+      "round_seconds": 0.09899225800000977,
+      "local_losses": {
+        "year_2005": 0.03962466927866141,
+        "year_2006": 0.13124234105149904,
+        "year_2012": 0.20227542519569397,
+        "year_2013": 0.27192094177007675,
+        "year_2014": 0.14638860523700714,
+        "year_2015": 0.4051424264907837,
+        "year_2016": 0.41969163715839386,
+        "year_2017": 0.343307301402092,
+        "year_2018": 0.37902379035949707
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.392957051595053,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 7.15444819132487,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 11.5880126953125,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 28.91849136352539,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 1.60369873046875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 17.03553009033203,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 41.76020050048828,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 2.20343017578125,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 21.18752098083496,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 13.133373975753784,
+      "rmse": 17.924530892147157,
+      "r2": 0.5764793379105755,
+      "mape": 0.21944429206135124,
+      "bias": -1.9645063877105713,
+      "n": 16
+    },
+    {
+      "round": 11,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 1090188,
+      "round_seconds": 0.10154913900004203,
+      "local_losses": {
+        "year_2005": 0.03292522160336375,
+        "year_2006": 0.07477437518537045,
+        "year_2012": 0.14750821888446808,
+        "year_2013": 0.16332609951496124,
+        "year_2014": 0.061987875029444695,
+        "year_2015": 0.38666439056396484,
+        "year_2016": 0.5520732700824738,
+        "year_2017": 0.3657524287700653,
+        "year_2018": 0.40745745599269867
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.658243815104166,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.811585744222005,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 9.588211059570312,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 26.933603286743164,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 1.2711639404296875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 16.319351196289062,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 39.70915222167969,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 1.1588973999023438,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 20.3257999420166,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 12.436513662338257,
+      "rmse": 17.036111832252153,
+      "r2": 0.6174220192660633,
+      "mape": 0.20734766317275447,
+      "bias": -1.9268858432769775,
+      "n": 16
+    },
+    {
+      "round": 12,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 1189296,
+      "round_seconds": 0.09893869100000074,
+      "local_losses": {
+        "year_2005": 0.04235600804289182,
+        "year_2006": 0.09762930047387879,
+        "year_2012": 0.10444294288754463,
+        "year_2013": 0.1795775070786476,
+        "year_2014": 0.13077031821012497,
+        "year_2015": 0.41936542093753815,
+        "year_2016": 0.4483798146247864,
+        "year_2017": 0.22955729812383652,
+        "year_2018": 0.43959639966487885
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 9.193270365397135,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.650852203369141,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 7.48291015625,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 25.441606521606445,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 0.4991455078125,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 15.807655334472656,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 37.7322998046875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 0.2146148681640625,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 19.30870246887207,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 12.002243757247925,
+      "rmse": 16.324067547403057,
+      "r2": 0.6487342773689161,
+      "mape": 0.19938012789508094,
+      "bias": -2.0109589099884033,
+      "n": 16
+    },
+    {
+      "round": 13,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 1288404,
+      "round_seconds": 0.10144235699999626,
+      "local_losses": {
+        "year_2005": 0.0729184386630853,
+        "year_2006": 0.07489410725732644,
+        "year_2012": 0.1565016284584999,
+        "year_2013": 0.16443545371294022,
+        "year_2014": 0.13871563971042633,
+        "year_2015": 0.3306545615196228,
+        "year_2016": 0.4216546192765236,
+        "year_2017": 0.1877170316874981,
+        "year_2018": 0.3594447523355484
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 9.429557800292969,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.243824005126953,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.7420501708984375,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 24.64009666442871,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 0.05171966552734375,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 14.985107421875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 35.861732482910156,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 0.8721122741699219,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 18.175352096557617,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 11.845424890518188,
+      "rmse": 15.762473830666456,
+      "r2": 0.6724875882599105,
+      "mape": 0.19485960218447954,
+      "bias": -2.212519407272339,
+      "n": 16
+    },
+    {
+      "round": 14,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 1387512,
+      "round_seconds": 0.1053677959999959,
+      "local_losses": {
+        "year_2005": 0.047530931110183396,
+        "year_2006": 0.0729425959289074,
+        "year_2012": 0.15306460484862328,
+        "year_2013": 0.20678748190402985,
+        "year_2014": 0.10152234137058258,
+        "year_2015": 0.3631560355424881,
+        "year_2016": 0.3182249069213867,
+        "year_2017": 0.2495633363723755,
+        "year_2018": 0.3591514676809311
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 9.74969482421875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.317178090413411,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.5911865234375,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 23.795778274536133,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 1.4768295288085938,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 14.522773742675781,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 33.940773010253906,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 1.3638877868652344,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 17.237638473510742,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 11.616358518600464,
+      "rmse": 15.131725679115481,
+      "r2": 0.6981745027084358,
+      "mape": 0.1887883119775804,
+      "bias": -2.4132397174835205,
+      "n": 16
+    },
+    {
+      "round": 15,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 1486620,
+      "round_seconds": 0.0982597720000058,
+      "local_losses": {
+        "year_2005": 0.05205092097943028,
+        "year_2006": 0.07921282760798931,
+        "year_2012": 0.19928277283906937,
+        "year_2013": 0.14308558776974678,
+        "year_2014": 0.10014957934617996,
+        "year_2015": 0.31846824288368225,
+        "year_2016": 0.3202158436179161,
+        "year_2017": 0.21549978852272034,
+        "year_2018": 0.24650900810956955
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 9.63684336344401,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.327205657958984,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 5.567718505859375,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 22.50225257873535,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 1.8675079345703125,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 14.001174926757812,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 32.5994873046875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.0677108764648438,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 16.396902084350586,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 11.246414422988892,
+      "rmse": 14.408461302609373,
+      "r2": 0.7263381775063326,
+      "mape": 0.18162679469517182,
+      "bias": -2.3129847049713135,
+      "n": 16
+    },
+    {
+      "round": 16,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 1585728,
+      "round_seconds": 0.10538445999998203,
+      "local_losses": {
+        "year_2005": 0.02683175386240085,
+        "year_2006": 0.06505567207932472,
+        "year_2012": 0.22787373512983322,
+        "year_2013": 0.24317539483308792,
+        "year_2014": 0.0693941991776228,
+        "year_2015": 0.3450949192047119,
+        "year_2016": 0.35510672628879547,
+        "year_2017": 0.20318789780139923,
+        "year_2018": 0.24738812446594238
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 9.592544555664062,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.31781005859375,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.15582275390625,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 21.490840911865234,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 2.9762802124023438,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 13.3568115234375,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 30.71619415283203,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.674121856689453,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 15.338274002075195,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 10.897366046905518,
+      "rmse": 13.844768535498297,
+      "r2": 0.7473319057323335,
+      "mape": 0.1746854485269421,
+      "bias": -2.600968837738037,
+      "n": 16
+    },
+    {
+      "round": 17,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 1684836,
+      "round_seconds": 0.10041657299996132,
+      "local_losses": {
+        "year_2005": 0.050056918213764824,
+        "year_2006": 0.05752600046495596,
+        "year_2012": 0.10265278443694115,
+        "year_2013": 0.22187447547912598,
+        "year_2014": 0.09756098687648773,
+        "year_2015": 0.29245901107788086,
+        "year_2016": 0.27647409588098526,
+        "year_2017": 0.23073705285787582,
+        "year_2018": 0.3388906568288803
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.970611572265625,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.243221282958984,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.055519104003906,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 20.468782424926758,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.862548828125,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 12.784286499023438,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 29.00555419921875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.740364074707031,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 14.295076370239258,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 10.608955144882202,
+      "rmse": 13.45333972417953,
+      "r2": 0.7614171488249464,
+      "mape": 0.1701759908845688,
+      "bias": -2.4160397052764893,
+      "n": 16
+    },
+    {
+      "round": 18,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 1783944,
+      "round_seconds": 0.10655165700001135,
+      "local_losses": {
+        "year_2005": 0.03619906430443128,
+        "year_2006": 0.060529339127242565,
+        "year_2012": 0.14927952736616135,
+        "year_2013": 0.13377925753593445,
+        "year_2014": 0.056350148282945156,
+        "year_2015": 0.3609711825847626,
+        "year_2016": 0.2693250849843025,
+        "year_2017": 0.2168889120221138,
+        "year_2018": 0.2736514136195183
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.5010986328125,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.298285166422526,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.3037567138671875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 19.87770652770996,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.252189636230469,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 12.496475219726562,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 28.188995361328125,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.347969055175781,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 13.826204299926758,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 10.427523851394653,
+      "rmse": 13.030335957459206,
+      "r2": 0.7761844625554061,
+      "mape": 0.16591613374031605,
+      "bias": -2.3514716625213623,
+      "n": 16
+    },
+    {
+      "round": 19,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 1883052,
+      "round_seconds": 0.10551206399998136,
+      "local_losses": {
+        "year_2005": 0.03047122371693452,
+        "year_2006": 0.06655455939471722,
+        "year_2012": 0.1019436102360487,
+        "year_2013": 0.18975573778152466,
+        "year_2014": 0.11694691702723503,
+        "year_2015": 0.2613256797194481,
+        "year_2016": 0.09802038595080376,
+        "year_2017": 0.18781747668981552,
+        "year_2018": 0.1717146709561348
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.610539754231771,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.158105214436849,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.5228042602539062,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 19.16450309753418,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.851371765136719,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 12.025924682617188,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 27.030807495117188,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 5.318241119384766,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 13.069036483764648,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 10.067813634872437,
+      "rmse": 12.624210505720662,
+      "r2": 0.7899186684808928,
+      "mape": 0.160099203539222,
+      "bias": -2.2845652103424072,
+      "n": 16
+    },
+    {
+      "round": 20,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 1982160,
+      "round_seconds": 0.10066216500001701,
+      "local_losses": {
+        "year_2005": 0.038432964434226356,
+        "year_2006": 0.0605690727631251,
+        "year_2012": 0.09972937032580376,
+        "year_2013": 0.22029616311192513,
+        "year_2014": 0.08053292706608772,
+        "year_2015": 0.45711444318294525,
+        "year_2016": 0.3004270866513252,
+        "year_2017": 0.2139059230685234,
+        "year_2018": 0.24520082771778107
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.550613403320312,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.19558842976888,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.4177169799804688,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 18.430524826049805,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.981956481933594,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 11.336029052734375,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 26.13653564453125,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.713191986083984,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 12.34337043762207,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 9.679623126983643,
+      "rmse": 12.185956198747624,
+      "r2": 0.8042515952264631,
+      "mape": 0.1538278983417411,
+      "bias": -2.1310954093933105,
+      "n": 16
+    },
+    {
+      "round": 21,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 2081268,
+      "round_seconds": 0.10172723499999847,
+      "local_losses": {
+        "year_2005": 0.038555619617303215,
+        "year_2006": 0.0796646090845267,
+        "year_2012": 0.08028372563421726,
+        "year_2013": 0.07679422944784164,
+        "year_2014": 0.09166279062628746,
+        "year_2015": 0.3431532010436058,
+        "year_2016": 0.22823681309819221,
+        "year_2017": 0.1959095001220703,
+        "year_2018": 0.2597065567970276
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.716222127278646,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.023311614990234,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.348731994628906,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 17.881153106689453,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 5.797477722167969,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 10.676895141601562,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 25.011749267578125,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.3524398803710938,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 11.176675796508789,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 9.548510074615479,
+      "rmse": 11.829320494691759,
+      "r2": 0.8155415296795749,
+      "mape": 0.15011483303070122,
+      "bias": -2.3018651008605957,
+      "n": 16
+    },
+    {
+      "round": 22,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 2180376,
+      "round_seconds": 0.09902829699996119,
+      "local_losses": {
+        "year_2005": 0.026487190276384354,
+        "year_2006": 0.06637902123232682,
+        "year_2012": 0.0962887592613697,
+        "year_2013": 0.09545958787202835,
+        "year_2014": 0.12687433511018753,
+        "year_2015": 0.2937731072306633,
+        "year_2016": 0.12896904721856117,
+        "year_2017": 0.16287890076637268,
+        "year_2018": 0.24267741292715073
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.370183308919271,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.051013946533203,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.9331741333007812,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 17.046527862548828,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.182769775390625,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 10.397430419921875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 24.162261962890625,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 5.181545257568359,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 10.190401077270508,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 9.125482320785522,
+      "rmse": 11.562672782878519,
+      "r2": 0.8237636551085938,
+      "mape": 0.14382868266846838,
+      "bias": -2.555011034011841,
+      "n": 16
+    },
+    {
+      "round": 23,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 2279484,
+      "round_seconds": 0.10233696500000633,
+      "local_losses": {
+        "year_2005": 0.041436951607465744,
+        "year_2006": 0.07256023958325386,
+        "year_2012": 0.0906003094278276,
+        "year_2013": 0.09683871641755104,
+        "year_2014": 0.08586331456899643,
+        "year_2015": 0.3277340233325958,
+        "year_2016": 0.11528656631708145,
+        "year_2017": 0.1330980286002159,
+        "year_2018": 0.2878530025482178
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 7.8634592692057295,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 5.9999033610026045,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.6683502197265625,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 16.45880889892578,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.049461364746094,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 9.95587158203125,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 23.331756591796875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.510429382324219,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 9.736852645874023,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 8.758090496063232,
+      "rmse": 11.2595576529025,
+      "r2": 0.832882602428747,
+      "mape": 0.13851310941094325,
+      "bias": -2.3373517990112305,
+      "n": 16
+    },
+    {
+      "round": 24,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 2378592,
+      "round_seconds": 0.10279700900002808,
+      "local_losses": {
+        "year_2005": 0.03003815623621146,
+        "year_2006": 0.12417494629820187,
+        "year_2012": 0.04419274441897869,
+        "year_2013": 0.17859547957777977,
+        "year_2014": 0.12978118658065796,
+        "year_2015": 0.38336318731307983,
+        "year_2016": 0.20221664011478424,
+        "year_2017": 0.17024177312850952,
+        "year_2018": 0.23452965170145035
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 7.9566497802734375,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.117464701334636,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.4861068725585938,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 16.130659103393555,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 5.9958648681640625,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 9.362106323242188,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 22.821823120117188,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 2.9064674377441406,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 9.08348274230957,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 8.636510848999023,
+      "rmse": 11.043414789985986,
+      "r2": 0.839237121001612,
+      "mape": 0.13608380072430462,
+      "bias": -2.414804458618164,
+      "n": 16
+    },
+    {
+      "round": 25,
+      "selected_clients": [
+        "year_2005",
+        "year_2006",
+        "year_2012",
+        "year_2013",
+        "year_2014",
+        "year_2015",
+        "year_2016",
+        "year_2017",
+        "year_2018"
+      ],
+      "selected_client_count": 9,
+      "selection_rate": 1.0,
+      "round_bytes": 99108,
+      "cumulative_bytes": 2477700,
+      "round_seconds": 0.10220902800000431,
+      "local_losses": {
+        "year_2005": 0.04557318426668644,
+        "year_2006": 0.052196063101291656,
+        "year_2012": 0.07736542448401451,
+        "year_2013": 0.10608037188649178,
+        "year_2014": 0.13610983826220036,
+        "year_2015": 0.28244931995868683,
+        "year_2016": 0.1385539546608925,
+        "year_2017": 0.1726599931716919,
+        "year_2018": 0.29285843670368195
+      },
+      "event_diagnostics": {
+        "year_2005": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 7.6716156005859375,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2006": {
+          "available_samples": 12,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 5.948500315348308,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2012": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 3.1402511596679688,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2013": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 15.898523330688477,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2014": {
+          "available_samples": 4,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 6.217384338378906,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2015": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 9.079559326171875,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2016": {
+          "available_samples": 6,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 22.13355255126953,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2017": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 4.179576873779297,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        },
+        "year_2018": {
+          "available_samples": 8,
+          "new_samples": 0,
+          "staleness_rounds": 1,
+          "latest_local_mae": 8.298439025878906,
+          "trigger_reasons": [
+            "all_clients"
+          ]
+        }
+      },
+      "mae": 8.257652521133423,
+      "rmse": 10.723866478922492,
+      "r2": 0.8484060734742431,
+      "mape": 0.13031520191605997,
+      "bias": -2.2128961086273193,
+      "n": 16
+    }
+  ],
+  "communication": {
+    "total_bytes": 2477700,
+    "total_megabytes": 2.3629188537597656,
+    "rounds_completed": 25,
+    "mean_selected_clients": 9.0,
+    "mean_selection_rate": 1.0,
+    "mean_round_seconds": 0.10022692656000345
+  }
+}

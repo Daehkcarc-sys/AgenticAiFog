@@ -333,6 +333,7 @@ record counts, class distributions, and limitations.
 | B0 raw high-frequency streams | Implemented (high_freq_factor in BaselineSimulator) |
 | Federated learning training loop | Implemented (federated/model.py, trainer.py, aggregator.py, fl_runner.py) |
 | FedAvg aggregation | Implemented (federated/aggregator.py) |
+| Real federated yield model (PyTorch MLP) | Implemented (federated/yield_model/, federated/yield_predictor.py) |
 | What-if scenario CLI | Implemented (tools/what_if.py) |
 | Real TinyML hardware integration | Separate/incomplete |
 | Cloud training (centralised) | Missing |
@@ -380,6 +381,7 @@ record counts, class distributions, and limitations.
 24. ✅ Implement FedAvg federated learning baseline. → `federated/fl_runner.py`, `model.py`, `trainer.py`, `aggregator.py`
 25. Add model-update transmission over Kafka `model_updates` topic.
 26. Replace synthetic evaluation progressively with real timestamped data.
+27. ✅ Integrate real federated tomato yield model. → `federated/yield_model/`, `federated/yield_predictor.py`, `requirements-yield.txt`
 
 ## 10. Verification
 

@@ -907,7 +907,17 @@ AgenticAiFog/
 │   ├── trainer.py                  Local training step
 │   ├── aggregator.py               FedAvg + SCAFFOLD aggregator
 │   ├── fl_runner.py                Multi-round FL orchestrator + CLI
-│   └── dataset_builder.py          Per-client JSONL dataset preparation
+│   ├── dataset_builder.py          Per-client JSONL dataset preparation
+│   ├── yield_predictor.py          PyTorch MLP fog-side yield inference wrapper
+│   └── yield_model/                Real federated yield model artifacts
+│       ├── global_yield_model.pt   FedAvg global model weights
+│       ├── imputer.joblib          Median imputer for missing features
+│       ├── scaler.joblib           StandardScaler for 65 features
+│       ├── model_config.json       MLP architecture config
+│       ├── model_card.json         FedAvg_v4; MAE=11.0 t/ha; R²=0.62
+│       ├── preprocessor_schema.json 65 feature names + target stats
+│       ├── fog_request_example.json  Example fog request envelope
+│       └── fog_response_example.json Example fog response
 │
 ├── services/
 │   └── digital_twin_service.py     Kafka consumer advancing the twin
@@ -984,4 +994,140 @@ python -m evaluation.statistical_eval --seeds 30 --output stats.json
 
 # 11. Full production stack
 docker compose -f docker-compose.production.yml up -d
+
+# 12. Yield prediction (requires requirements-yield.txt)
+pip install -r requirements-yield.txt
+python -c "
+from federated.yield_predictor import FogYieldPredictor, load_example_request
+p = FogYieldPredictor()
+req = load_example_request()
+print(p.handle_fog_request(req))
+"
 ```
+
+---
+
+## 20. Real federated yield model — production-ready tomato yield prediction
+
+### What it is
+
+`federated/yield_model/` contains the output of the real FedAvg training phase
+(`final_fog_yield_model1.zip`). It is a PyTorch MLP trained across 9 year-based
+Fog clients on the **Carucci industrial-tomato dataset** (data from 1978–2022;
+commercial-scale tomato cultivation records from Italy).
+
+### Why it exists
+
+The simulation FL stack (`federated/model.py`, `trainer.py`, `aggregator.py`) uses
+a pure-Python logistic regression for infrastructure validation — its purpose is to
+confirm the FedAvg mechanics work, not to produce a deployable yield model. The
+real model in `federated/yield_model/` is the actual trained artifact suitable for
+Fog-side yield prediction.
+
+### Architecture
+
+```
+Input(65) → Linear(65→32) → BatchNorm1d(32) → ReLU → Dropout(0.1)
+          → Linear(32→16) → BatchNorm1d(16) → ReLU → Dropout(0.1)
+          → Linear(16→1)   [raw z-score output]
+```
+
+Denormalization: `predicted_yield = raw_out × 24.328 + 86.303` (t/ha).
+
+### Training details
+
+| Property | Value |
+|---|---|
+| Dataset | Carucci industrial-tomato (Italy, 1978–2022) |
+| Input features | 65 numeric variables (soil, climate, irrigation, agronomy) |
+| FL clients | 9 (each client = one year cohort) |
+| Aggregation | FedAvg (weighted by n_train) |
+| Target | Tomato yield (t/ha), z-score normalized |
+| Seeds evaluated | 30 |
+| **MAE** | **≈ 11.0 t/ha** |
+| **R²** | **≈ 0.62** |
+
+### Files
+
+| File | Description |
+|---|---|
+| `global_yield_model.pt` | PyTorch state_dict (15 KB) |
+| `imputer.joblib` | sklearn SimpleImputer (median strategy) for missing values |
+| `scaler.joblib` | sklearn StandardScaler fit on all 65 features |
+| `encoder.joblib` | Encoder placeholder (no categorical features) |
+| `model_config.json` | `{"input_dim": 65, "hidden_dims": [32, 16], "dropout": 0.1}` |
+| `model_card.json` | Training metadata, metrics, FedAvg version |
+| `preprocessor_schema.json` | 65 feature names, target_mean, target_std |
+| `fog_request_example.json` | Example input envelope |
+| `fog_response_example.json` | Expected output: `{"predicted_yield": 71.63, "unit": "t/ha", ...}` |
+| `results.json` | Per-seed evaluation for seed 104 |
+| `README.md` | FL phase documentation |
+
+### API
+
+```python
+from federated.yield_predictor import FogYieldPredictor
+
+predictor = FogYieldPredictor()
+
+# Predict from a partial feature dict (missing values are imputed)
+result = predictor.predict({"Radiation": 12.5, "Tmax": 29.0, "Precip": 0.0})
+# {"predicted_yield": 74.2, "unit": "t/ha", "source": "federated_global_yield_model", ...}
+
+# Process a full Fog request envelope
+result = predictor.handle_fog_request({
+    "zone_id": "year_2005",
+    "timestamp": "2026-01-10T08:00:00Z",
+    "features": {"Radiation": 12.5, ...}
+})
+# Adds "zone_id" and "request_timestamp" to the response dict.
+
+# Inspect what features the model expects
+print(predictor.feature_names)  # list of 65 feature keys
+
+# Read the model card
+print(predictor.model_card)
+```
+
+### Fog request / response contract
+
+```json
+// Request
+{
+  "zone_id": "year_2005",
+  "timestamp": "2026-01-10T08:00:00Z",
+  "model_version": "FedAvg_v4",
+  "features": {
+    "Radiation": 12.5,
+    "Tmax": 29.0,
+    "Precip": 0.0
+  }
+}
+
+// Response
+{
+  "predicted_yield": 71.63,
+  "unit": "t/ha",
+  "source": "federated_global_yield_model",
+  "model_version": "FedAvg_v4",
+  "zone_id": "year_2005",
+  "confidence_note": "mean MAE ≈ 11.0 t/ha over 30 seeds; year-based fog clients; no differential privacy"
+}
+```
+
+### Dependencies
+
+```bash
+pip install -r requirements-yield.txt
+# torch>=2.0, scikit-learn>=1.3, joblib>=1.3
+```
+
+The rest of the codebase has no dependency on these packages. The yield predictor
+is an opt-in module; importing it without torch/scikit-learn raises a clear
+`ImportError` with installation instructions.
+
+### Privacy note
+
+This model was trained with standard FedAvg and **no differential privacy**. It
+should not be considered production-safe for scenarios where client data must be
+provably protected.

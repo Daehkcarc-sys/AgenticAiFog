@@ -251,6 +251,67 @@ Available scenarios: `irrigation`, `disease_risk`, `heat_stress`,
 
 ---
 
+## Session 3 — Real federated tomato yield model integration
+
+### Federated yield predictor (`federated/yield_predictor.py`)
+
+The `final_fog_yield_model1.zip` produced by the FedAvg training phase (from
+the `main` branch) was extracted into `federated/yield_model/`. The following
+artifacts are now part of the repository:
+
+| File | Purpose |
+|---|---|
+| `global_yield_model.pt` | PyTorch MLP weights (FedAvg global model) |
+| `imputer.joblib` | sklearn SimpleImputer for missing-feature handling |
+| `scaler.joblib` | sklearn StandardScaler (fit on all 65 features) |
+| `model_config.json` | Architecture: `{input_dim: 65, hidden_dims: [32, 16], dropout: 0.1}` |
+| `model_card.json` | FedAvg_v4, MAE=10.999 t/ha, R²=0.62 over 30 seeds |
+| `preprocessor_schema.json` | 65 feature names, `target_mean=86.303`, `target_std=24.328` |
+| `fog_request_example.json` | Example Fog request envelope |
+| `fog_response_example.json` | Expected response: `{"predicted_yield": 71.63, "unit": "t/ha", ...}` |
+| `results.json` | Detailed evaluation results for seed 104 |
+| `README.md` | FL phase documentation |
+
+**`federated/yield_predictor.py`** wraps the PyTorch model with:
+
+- `FogYieldPredictor(model_dir, device)` — loads model + preprocessors on init.
+- `predict(features: dict) -> dict` — builds a 65-element feature vector (NaN
+  for missing features, then imputed), runs sklearn preprocessing + PyTorch
+  inference, denormalises using `target_mean` / `target_std`, and returns:
+  ```json
+  {
+    "predicted_yield": 71.6,
+    "unit": "t/ha",
+    "source": "federated_global_yield_model",
+    "model_version": "FedAvg_v4",
+    "confidence_note": "mean MAE ≈ 11.0 t/ha over 30 seeds"
+  }
+  ```
+- `handle_fog_request(request: dict) -> dict` — processes the full Fog
+  envelope (`zone_id`, `timestamp`, `features`) and adds `zone_id` /
+  `request_timestamp` to the response.
+- `feature_names` property — returns the list of 65 expected input features.
+- `model_card` property — returns the parsed `model_card.json`.
+
+**`requirements-yield.txt`** — optional dependencies: `torch>=2.0`,
+`scikit-learn>=1.3`, `joblib>=1.3`. Install only when the yield predictor is
+used.
+
+**Model architecture** (`YieldMLP`):
+
+```
+Input(65) → Linear(65→32) → BN → ReLU → Dropout(0.1)
+          → Linear(32→16) → BN → ReLU → Dropout(0.1)
+          → Linear(16→1)
+```
+
+**Training details:** 9 year-based Fog clients (Carucci industrial-tomato
+dataset, 1978–2022); FedAvg with weighted averaging proportional to
+`n_train`; target z-score normalized (mean=86.30 t/ha, std=24.33 t/ha);
+30-seed repeated evaluation: **MAE ≈ 11.0 t/ha, R² ≈ 0.62**.
+
+---
+
 ## Files added or modified across both sessions
 
 | Path | Status | Description |
@@ -279,6 +340,12 @@ Available scenarios: `irrigation`, `disease_risk`, `heat_stress`,
 | `federated/trainer.py` | New | Local FL training step |
 | `federated/aggregator.py` | New | FedAvg + SCAFFOLD-style correction |
 | `federated/fl_runner.py` | New | Multi-round FL orchestrator |
+| `federated/yield_predictor.py` | New | PyTorch MLP yield inference wrapper |
+| `federated/yield_model/` | New | Global yield model artifacts (9 files) |
+| `final_fog_yield_model1.zip` | New | Source zip from main branch (FL phase output) |
+| `requirements-yield.txt` | New | Optional deps: torch, scikit-learn, joblib |
 | `KAFKA_FIXES.md` | New | Documents 6 Kafka bugs |
 | `WHAT_WE_ADDED.md` | New | This file |
 | `READMEWHATWEDID.md` | Modified | Status table and section 9 updated |
+| `PROJECT_OVERVIEW.md` | Modified | Section 20 added: real FL yield model |
+| `README.md` | Modified | Added Lemon and Soni-KR to authors |

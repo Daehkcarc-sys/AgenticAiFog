@@ -1,0 +1,8 @@
+{
+  "predicted_yield": 71.63800102619452,
+  "unit": "t/ha",
+  "source": "federated_global_yield_model",
+  "zone_id": "year_2005",
+  "model_version": "FedAvg_v4",
+  "unit_status": "metadata: q"
+}

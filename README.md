@@ -665,4 +665,6 @@ Tests cover:
 - Sarra
 - Limon
 - 3otri
+- Lemon
+- Soni-KR
 
