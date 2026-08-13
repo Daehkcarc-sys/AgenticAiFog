@@ -66,25 +66,43 @@ class HttpPublisher(CloudPublisher):
 
 
 class KafkaPublisher(CloudPublisher):
-    """Kafka publisher using kafka-python when installed."""
+    """Kafka publisher using kafka-python when installed.
+
+    Keeps a single long-lived KafkaProducer per instance so we don't open
+    a new TCP connection for every message.
+    """
 
     def __init__(self, bootstrap_servers: str) -> None:
         self.bootstrap_servers = bootstrap_servers
+        self._producer = None
 
-    def publish(self, topic: str, payload: dict[str, Any]) -> str:
+    def _get_producer(self):
+        if self._producer is not None:
+            return self._producer
         try:
             from kafka import KafkaProducer
         except ImportError as exc:
             raise RuntimeError("kafka-python is required for CLOUD_SYNC_MODE=kafka") from exc
-
-        producer = KafkaProducer(
+        self._producer = KafkaProducer(
             bootstrap_servers=self.bootstrap_servers,
-            value_serializer=lambda value: json.dumps(value).encode("utf-8"),
+            value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+            acks="all",
+            retries=3,
+            linger_ms=5,
         )
-        producer.send(topic, payload)
-        producer.flush(timeout=5)
-        producer.close()
+        return self._producer
+
+    def publish(self, topic: str, payload: dict[str, Any]) -> str:
+        producer = self._get_producer()
+        future = producer.send(topic, payload)
+        producer.flush(timeout=10)
+        future.get(timeout=10)
         return "sent_kafka"
+
+    def close(self) -> None:
+        if self._producer is not None:
+            self._producer.close()
+            self._producer = None
 
 
 class ReliableCloudPublisher(CloudPublisher):
@@ -145,15 +163,18 @@ class CloudEventPublisher(CloudPublisher):
 
 
 def build_cloud_publisher() -> CloudPublisher:
-    mode = CLOUD_SYNC_MODE.lower()
+    import os as _os
+    mode = (_os.getenv("CLOUD_SYNC_MODE") or CLOUD_SYNC_MODE).lower()
+    kafka_bootstrap = _os.getenv("CLOUD_KAFKA_BOOTSTRAP") or CLOUD_KAFKA_BOOTSTRAP
+    http_endpoint = _os.getenv("CLOUD_HTTP_ENDPOINT") or CLOUD_HTTP_ENDPOINT
     if mode == "http":
-        if not CLOUD_HTTP_ENDPOINT:
+        if not http_endpoint:
             raise ValueError("CLOUD_HTTP_ENDPOINT is required for CLOUD_SYNC_MODE=http")
-        base: CloudPublisher = HttpPublisher(CLOUD_HTTP_ENDPOINT)
+        base: CloudPublisher = HttpPublisher(http_endpoint)
     elif mode == "kafka":
-        if not CLOUD_KAFKA_BOOTSTRAP:
+        if not kafka_bootstrap:
             raise ValueError("CLOUD_KAFKA_BOOTSTRAP is required for CLOUD_SYNC_MODE=kafka")
-        base = KafkaPublisher(CLOUD_KAFKA_BOOTSTRAP)
+        base = KafkaPublisher(kafka_bootstrap)
     else:
         base = LocalQueuePublisher()
     return CloudEventPublisher(ReliableCloudPublisher(base))

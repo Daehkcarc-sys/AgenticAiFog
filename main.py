@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -138,6 +139,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=50,
         help="maximum dataset rows to process (default: 50)",
     )
+    parser.add_argument(
+        "--kafka",
+        action="store_true",
+        help="publish pipeline events to Kafka/Redpanda (requires running broker)",
+    )
+    parser.add_argument(
+        "--kafka-bootstrap",
+        default=None,
+        metavar="HOST:PORT",
+        help="Kafka bootstrap address (default: localhost:9092)",
+    )
     return parser.parse_args(argv)
 
 
@@ -145,6 +157,12 @@ def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     if args.limit < 1:
         raise ValueError("--limit must be at least 1")
+
+    if args.kafka:
+        bootstrap = args.kafka_bootstrap or "localhost:9092"
+        os.environ["CLOUD_SYNC_MODE"] = "kafka"
+        os.environ["CLOUD_KAFKA_BOOTSTRAP"] = bootstrap
+        logger.info("Kafka mode enabled — broker: %s", bootstrap)
 
     offline = args.offline or is_offline_mode()
     set_offline_mode(offline)
